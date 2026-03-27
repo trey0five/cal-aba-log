@@ -67,9 +67,6 @@ export default function Children() {
         </ul>
       )}
 
-      <button onClick={() => navigate('/')} className="text-white font-bold hover:underline text-sm block text-center w-full mt-4 pb-4">
-        ← Back to Home
-      </button>
     </div>
   )
 }

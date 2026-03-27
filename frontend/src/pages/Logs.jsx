@@ -116,10 +116,6 @@ export default function Logs() {
             ))}
           </ul>
         )}
-
-        <button onClick={() => navigate('/')} className="text-white font-bold hover:underline text-sm block text-center w-full mt-4 pb-4">
-          ← Back
-        </button>
       </div>
     )
   }
@@ -138,7 +134,7 @@ export default function Logs() {
           </div>
           <button
             onClick={() => setSelectedDate(null)}
-            className="btn-camp text-sm !py-2 !px-4 !bg-white/20 text-white"
+            className="back-btn"
           >
             ← Back
           </button>
@@ -232,9 +228,9 @@ export default function Logs() {
         <h1 className="font-heading text-2xl text-white drop-shadow-lg">{selectedChild.name}</h1>
         <button
           onClick={() => { setSelectedChild(null); setAllChildLogs([]) }}
-          className="btn-camp text-sm !py-2 !px-4 !bg-white/20 text-white"
+          className="back-btn"
         >
-          ← All Campers
+          ← Back
         </button>
       </div>
 

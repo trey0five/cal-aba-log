@@ -192,6 +192,9 @@ def handle_delete_staff(event, staff_id):
         return cors_response(403, {'error': 'Admin only'})
 
     staff_list = read_json('staff.json', [])
+    target = next((s for s in staff_list if s['id'] == staff_id), None)
+    if target and target.get('role') == 'admin':
+        return cors_response(403, {'error': 'Cannot delete admin accounts'})
     staff_list = [s for s in staff_list if s['id'] != staff_id]
     write_json('staff.json', staff_list)
     return cors_response(200, {'message': 'Deleted'})
@@ -442,17 +445,21 @@ def handle_check_setup():
 _seeded = False
 
 def _seed_admins():
-    """Ensure the second admin 'Michael' exists. Runs once per Lambda cold start."""
+    """Ensure seeded admins exist. Runs once per Lambda cold start."""
     global _seeded
     if _seeded:
         return
     staff_list = read_json('staff.json', [])
     if len(staff_list) == 0:
         return  # Setup not done yet
-    if not any(s['name'].lower() == 'michael' for s in staff_list):
-        salt, pin_hash = hash_pin('123456')
-        michael = {'id': generate_id(), 'name': 'Michael', 'pin_hash': pin_hash, 'salt': salt, 'role': 'admin'}
-        staff_list.append(michael)
+    changed = False
+    for admin_name in ['Michael', 'Torrey']:
+        if not any(s['name'].lower() == admin_name.lower() for s in staff_list):
+            salt, pin_hash = hash_pin('123456')
+            admin = {'id': generate_id(), 'name': admin_name, 'pin_hash': pin_hash, 'salt': salt, 'role': 'admin'}
+            staff_list.append(admin)
+            changed = True
+    if changed:
         write_json('staff.json', staff_list)
     _seeded = True
 

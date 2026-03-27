@@ -228,6 +228,22 @@ h1, h2, h3, .font-heading {
   100% { left: 110vw; top: 30%; transform: rotate(10deg); }
 }
 
+/* Drifting puzzle pieces */
+.puzzle-piece {
+  position: fixed;
+  z-index: -1;
+  opacity: 0.35;
+  animation: puzzle-drift 30s linear infinite;
+}
+
+@keyframes puzzle-drift {
+  0% { left: -40px; transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.1); }
+  50% { transform: rotate(180deg) scale(0.9); }
+  75% { transform: rotate(270deg) scale(1.05); }
+  100% { left: 110vw; transform: rotate(360deg) scale(1); }
+}
+
 /* ============================================
    CARD / UI STYLES
    ============================================ */
@@ -364,6 +380,26 @@ h1, h2, h3, .font-heading {
   text-align: left;
 }
 
+/* Back button - uniform style */
+.back-btn {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateX(-2px);
+}
+
 /* Status badges */
 .badge-in {
   background: linear-gradient(135deg, #C8E6C9, #A5D6A7);
@@ -390,7 +426,6 @@ h1, h2, h3, .font-heading {
   background: linear-gradient(135deg, var(--wood-brown) 0%, #A0781E 50%, var(--wood-light) 100%);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: relative;
-  overflow: hidden;
   border-bottom: 4px solid var(--sun-yellow);
 }
 

@@ -185,6 +185,13 @@ export default function ChildProfile() {
     <div className="page-enter max-w-lg mx-auto space-y-4">
       {showConfetti && <Confetti />}
 
+      {/* Back button */}
+      <div className="flex justify-end">
+        <button onClick={() => navigate('/children')} className="back-btn">
+          ← Back
+        </button>
+      </div>
+
       {/* Header with QR */}
       <div className="camp-card">
         <h1 className="font-heading text-3xl text-center mb-1">{child.name}</h1>
@@ -449,9 +456,6 @@ export default function ChildProfile() {
         </button>
       </div>
 
-      <button onClick={() => navigate('/children')} className="text-white font-bold hover:underline text-sm block text-center w-full pb-4">
-        ← Back to Campers
-      </button>
     </div>
   )
 }

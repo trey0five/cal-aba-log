@@ -30,7 +30,7 @@ export default function Navbar() {
             className="h-12 w-12 rounded-full border-2 border-yellow-400 shadow-lg mr-1"
           />
           <span className="font-heading text-white text-lg leading-tight drop-shadow-md hidden sm:block">
-            Camp CAL
+            CAMP CAL
           </span>
         </Link>
 

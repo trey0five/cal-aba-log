@@ -96,19 +96,18 @@ export default function Staff() {
               <p className="font-heading text-base">🧑‍🏫 {s.name}</p>
               <p className="text-gray-400 text-xs font-bold uppercase">{s.role}</p>
             </div>
-            <button
-              onClick={() => handleDelete(s.id, s.name)}
-              className="btn-camp btn-camp-red text-xs !py-1.5 !px-3 !text-sm !font-semibold"
-            >
-              Remove
-            </button>
+            {s.role !== 'admin' && (
+              <button
+                onClick={() => handleDelete(s.id, s.name)}
+                className="btn-camp btn-camp-red text-xs !py-1.5 !px-3 !text-sm !font-semibold"
+              >
+                Remove
+              </button>
+            )}
           </li>
         ))}
       </ul>
 
-      <button onClick={() => navigate('/')} className="text-white font-bold hover:underline text-sm block text-center w-full mt-4 pb-4">
-        ← Back to Home
-      </button>
     </div>
   )
 }
