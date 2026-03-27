@@ -29,7 +29,7 @@ export default function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-[80vh]">
-      <div className="camp-card max-w-sm w-full text-center sm:bg-white/[0.92] bg-transparent !border-transparent sm:!border-white/50 !shadow-none sm:!shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+      <div className="camp-card login-card max-w-sm w-full text-center">
         <div className="flex flex-col items-center mb-6">
           <img
             src={`${import.meta.env.BASE_URL}logo.jpeg`}
