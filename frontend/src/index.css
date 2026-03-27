@@ -197,15 +197,40 @@ h1, h2, h3, .font-heading {
   float: left;
 }
 
-.ocean-wave-1 { animation: ocean-scroll 6s linear infinite; }
-.ocean-wave-2 { animation: ocean-scroll 8s linear infinite reverse; }
-.ocean-wave-3 { animation: ocean-scroll 10s linear infinite; animation-delay: -3s; }
-.ocean-wave-4 { animation: ocean-scroll 7s linear infinite reverse; animation-delay: -2s; }
-.ocean-wave-5 { animation: ocean-scroll 9s linear infinite; animation-delay: -5s; }
+.ocean-wave-1 { animation: ocean-scroll 6s linear infinite, wave-bob-1 3s ease-in-out infinite; }
+.ocean-wave-2 { animation: ocean-scroll 8s linear infinite reverse, wave-bob-2 4s ease-in-out infinite; }
+.ocean-wave-3 { animation: ocean-scroll 10s linear infinite, wave-bob-3 3.5s ease-in-out infinite; animation-delay: -3s; }
+.ocean-wave-4 { animation: ocean-scroll 7s linear infinite reverse, wave-bob-4 4.5s ease-in-out infinite; animation-delay: -2s; }
+.ocean-wave-5 { animation: ocean-scroll 9s linear infinite, wave-bob-5 5s ease-in-out infinite; animation-delay: -5s; }
 
 @keyframes ocean-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from { transform: translateX(0) translateY(var(--bob-y, 0)); }
+  to { transform: translateX(-50%) translateY(var(--bob-y, 0)); }
+}
+
+@keyframes wave-bob-1 {
+  0%, 100% { bottom: 0px; }
+  50% { bottom: 8px; }
+}
+
+@keyframes wave-bob-2 {
+  0%, 100% { bottom: 0px; }
+  50% { bottom: -6px; }
+}
+
+@keyframes wave-bob-3 {
+  0%, 100% { bottom: 2px; }
+  50% { bottom: 10px; }
+}
+
+@keyframes wave-bob-4 {
+  0%, 100% { bottom: 0px; }
+  50% { bottom: 7px; }
+}
+
+@keyframes wave-bob-5 {
+  0%, 100% { bottom: -2px; }
+  50% { bottom: 5px; }
 }
 
 /* Grass blades */
