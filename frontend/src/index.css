@@ -351,6 +351,19 @@ h1, h2, h3, .font-heading {
   box-shadow: 0 0 0 4px rgba(26, 159, 255, 0.2);
 }
 
+/* Fix date input on mobile */
+.camp-input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-height: 48px;
+  line-height: 1.5;
+}
+
+.camp-input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 /* Status badges */
 .badge-in {
   background: linear-gradient(135deg, #C8E6C9, #A5D6A7);

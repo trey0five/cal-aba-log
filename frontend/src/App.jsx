@@ -10,6 +10,7 @@ import AddChild from './pages/AddChild'
 import ChildProfile from './pages/ChildProfile'
 import Logs from './pages/Logs'
 import Staff from './pages/Staff'
+import ChangePin from './pages/ChangePin'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/child/:childId" element={<ProtectedRoute><ChildProfile /></ProtectedRoute>} />
           <Route path="/logs" element={<ProtectedRoute><Logs /></ProtectedRoute>} />
           <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
+          <Route path="/change-pin" element={<ProtectedRoute><ChangePin /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

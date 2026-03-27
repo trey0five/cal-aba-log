@@ -2,43 +2,69 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/client'
 
+function formatPhone(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 10)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+}
+
 export default function AddChild() {
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [age, setAge] = useState('')
   const [allergies, setAllergies] = useState([''])
-  const [behaviors, setBehaviors] = useState('')
+  const [behaviors, setBehaviors] = useState([''])
   const [elopementRisk, setElopementRisk] = useState(false)
   const [notes, setNotes] = useState('')
-  const [caregivers, setCaregivers] = useState([{ name: '', relationship: '', phone: '' }])
+  const [caregivers, setCaregivers] = useState([{ firstName: '', lastName: '', relationship: '', phone: '' }])
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const addCaregiver = () => setCaregivers([...caregivers, { name: '', relationship: '', phone: '' }])
+  const addCaregiver = () => setCaregivers([...caregivers, { firstName: '', lastName: '', relationship: '', phone: '' }])
   const removeCaregiver = (i) => { if (caregivers.length > 1) setCaregivers(caregivers.filter((_, idx) => idx !== i)) }
-  const updateCaregiver = (i, field, value) => { const u = [...caregivers]; u[i][field] = value; setCaregivers(u) }
+  const updateCaregiver = (i, field, value) => {
+    const u = [...caregivers]
+    if (field === 'phone') value = formatPhone(value)
+    u[i][field] = value
+    setCaregivers(u)
+  }
 
   const addAllergy = () => setAllergies([...allergies, ''])
   const removeAllergy = (i) => { if (allergies.length > 1) setAllergies(allergies.filter((_, idx) => idx !== i)) }
   const updateAllergy = (i, value) => { const u = [...allergies]; u[i] = value; setAllergies(u) }
 
+  const addBehavior = () => setBehaviors([...behaviors, ''])
+  const removeBehavior = (i) => { if (behaviors.length > 1) setBehaviors(behaviors.filter((_, idx) => idx !== i)) }
+  const updateBehavior = (i, value) => { const u = [...behaviors]; u[i] = value; setBehaviors(u) }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    const validCaregivers = caregivers.filter((c) => c.name.trim())
+    const validCaregivers = caregivers
+      .filter((c) => c.firstName.trim())
+      .map((c) => ({
+        name: `${c.firstName.trim()} ${c.lastName.trim()}`.trim(),
+        relationship: c.relationship,
+        phone: c.phone,
+      }))
+
     if (validCaregivers.length === 0) {
       setError('At least one caregiver is required')
       return
     }
 
     const validAllergies = allergies.filter((a) => a.trim())
+    const validBehaviors = behaviors.filter((b) => b.trim())
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
 
     try {
       const res = await api.post('/children', {
-        name,
+        name: fullName,
         age,
         allergies: validAllergies,
-        behaviors,
+        behaviors: validBehaviors,
         elopement_risk: elopementRisk,
         notes,
         caregivers: validCaregivers,
@@ -62,9 +88,15 @@ export default function AddChild() {
           {/* Basic Info */}
           <div className="space-y-3">
             <h2 className="font-heading text-lg text-gray-700 border-b-2 border-yellow-400 pb-1">Basic Information</h2>
-            <div>
-              <label className="block text-sm font-bold text-gray-600 mb-1">Child's Name *</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="camp-input" required />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">First Name *</label>
+                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="camp-input" required />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-1">Last Name *</label>
+                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="camp-input" required />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-600 mb-1">Age</label>
@@ -104,16 +136,34 @@ export default function AddChild() {
               </button>
             </div>
 
+            {/* Behaviors - dynamic list */}
             <div>
               <label className="block text-sm font-bold text-gray-600 mb-1">Behaviors</label>
-              <textarea
-                value={behaviors}
-                onChange={(e) => setBehaviors(e.target.value)}
-                className="camp-input"
-                rows={2}
-                placeholder="Describe any relevant behaviors or triggers..."
-              />
+              {behaviors.map((behavior, i) => (
+                <div key={i} className="flex items-center gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={behavior}
+                    onChange={(e) => updateBehavior(i, e.target.value)}
+                    className="camp-input !py-2"
+                    placeholder={`Behavior ${i + 1} (e.g. Elopement, Aggression)`}
+                  />
+                  {behaviors.length > 1 && (
+                    <button type="button" onClick={() => removeBehavior(i)} className="text-red-500 font-bold text-lg px-2 hover:text-red-700">
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addBehavior}
+                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-bold text-sm hover:border-yellow-400 hover:text-yellow-600 transition-all"
+              >
+                + Add Behavior
+              </button>
             </div>
+
             <div className="flex items-center gap-3 bg-red-50 p-3 rounded-xl border border-red-200">
               <input
                 type="checkbox"
@@ -155,14 +205,23 @@ export default function AddChild() {
                     </button>
                   )}
                 </div>
-                <input
-                  type="text"
-                  placeholder="Full name *"
-                  value={cg.name}
-                  onChange={(e) => updateCaregiver(i, 'name', e.target.value)}
-                  className="camp-input !py-2"
-                  required
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="First name *"
+                    value={cg.firstName}
+                    onChange={(e) => updateCaregiver(i, 'firstName', e.target.value)}
+                    className="camp-input !py-2"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last name"
+                    value={cg.lastName}
+                    onChange={(e) => updateCaregiver(i, 'lastName', e.target.value)}
+                    className="camp-input !py-2"
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
@@ -173,7 +232,7 @@ export default function AddChild() {
                   />
                   <input
                     type="tel"
-                    placeholder="Phone number"
+                    placeholder="(555) 555-5555"
                     value={cg.phone}
                     onChange={(e) => updateCaregiver(i, 'phone', e.target.value)}
                     className="camp-input !py-2 text-sm"

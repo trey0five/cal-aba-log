@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../api/client'
 
 export default function Children() {
+  const navigate = useNavigate()
   const [children, setChildren] = useState([])
 
   useEffect(() => {
@@ -65,6 +66,10 @@ export default function Children() {
           ))}
         </ul>
       )}
+
+      <button onClick={() => navigate('/')} className="text-white font-bold hover:underline text-sm block text-center w-full mt-4 pb-4">
+        ← Back to Home
+      </button>
     </div>
   )
 }

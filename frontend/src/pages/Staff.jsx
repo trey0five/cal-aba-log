@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
 
 export default function Staff() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [staff, setStaff] = useState([])
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => { loadStaff() }, [])
+  useEffect(() => {
+    if (user?.role !== 'admin') {
+      navigate('/')
+      return
+    }
+    loadStaff()
+  }, [])
 
   const loadStaff = () => {
     api.get('/staff').then((res) => setStaff(res.data)).catch(() => {})
@@ -95,6 +105,10 @@ export default function Staff() {
           </li>
         ))}
       </ul>
+
+      <button onClick={() => navigate('/')} className="text-white font-bold hover:underline text-sm block text-center w-full mt-4 pb-4">
+        ← Back to Home
+      </button>
     </div>
   )
 }

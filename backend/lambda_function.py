@@ -403,6 +403,32 @@ def handle_delete_log(event, body):
     return cors_response(200, {'message': 'Log soft-deleted'})
 
 
+def handle_change_pin(event, body):
+    """Allow a logged-in user to change their own PIN."""
+    user = get_staff_from_token(event)
+    if not user:
+        return cors_response(401, {'error': 'Unauthorized'})
+
+    current_pin = body.get('current_pin', '')
+    new_pin = body.get('new_pin', '')
+    if not current_pin or not new_pin or len(new_pin) < 4:
+        return cors_response(400, {'error': 'Current PIN and new PIN (min 4 digits) required'})
+
+    staff_list = read_json('staff.json', [])
+    staff = next((s for s in staff_list if s['id'] == user['id']), None)
+    if not staff:
+        return cors_response(404, {'error': 'Staff not found'})
+
+    if not verify_pin(current_pin, staff['salt'], staff['pin_hash']):
+        return cors_response(401, {'error': 'Current PIN is incorrect'})
+
+    salt, pin_hash = hash_pin(new_pin)
+    staff['salt'] = salt
+    staff['pin_hash'] = pin_hash
+    write_json('staff.json', staff_list)
+    return cors_response(200, {'message': 'PIN changed successfully'})
+
+
 def handle_check_setup():
     """Check if initial setup has been done."""
     staff_list = read_json('staff.json', [])
@@ -413,6 +439,24 @@ def handle_check_setup():
 # Lambda handler
 # ──────────────────────────────────────────────
 
+_seeded = False
+
+def _seed_admins():
+    """Ensure the second admin 'Michael' exists. Runs once per Lambda cold start."""
+    global _seeded
+    if _seeded:
+        return
+    staff_list = read_json('staff.json', [])
+    if len(staff_list) == 0:
+        return  # Setup not done yet
+    if not any(s['name'].lower() == 'michael' for s in staff_list):
+        salt, pin_hash = hash_pin('123456')
+        michael = {'id': generate_id(), 'name': 'Michael', 'pin_hash': pin_hash, 'salt': salt, 'role': 'admin'}
+        staff_list.append(michael)
+        write_json('staff.json', staff_list)
+    _seeded = True
+
+
 def lambda_handler(event, context):
     method = event.get('httpMethod', 'GET')
     path = event.get('path', '')
@@ -420,6 +464,9 @@ def lambda_handler(event, context):
     # Handle CORS preflight
     if method == 'OPTIONS':
         return cors_response(200, {})
+
+    # Seed admin accounts (idempotent)
+    _seed_admins()
 
     # Parse body
     body = {}
@@ -465,5 +512,7 @@ def lambda_handler(event, context):
         return handle_get_logs(event)
     elif path == '/api/logs/delete' and method == 'POST':
         return handle_delete_log(event, body)
+    elif path == '/api/change-pin' and method == 'POST':
+        return handle_change_pin(event, body)
     else:
         return cors_response(404, {'error': 'Not found'})

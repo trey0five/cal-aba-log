@@ -57,6 +57,8 @@ export default function ChildProfile() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [todayLogs, setTodayLogs] = useState([])
   const [allLogs, setAllLogs] = useState([])
+  const [historyPage, setHistoryPage] = useState(1)
+  const HISTORY_PER_PAGE = 5
 
   useEffect(() => {
     loadData()
@@ -291,38 +293,48 @@ export default function ChildProfile() {
         <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Camper Information</h2>
         <div className="space-y-3 text-sm">
           {child.age && (
-            <div className="flex justify-between">
-              <span className="font-bold text-gray-600">Age</span>
-              <span>{child.age}</span>
+            <div className="bg-blue-50 rounded-xl p-3 border border-blue-200 flex items-center justify-between">
+              <span className="font-bold text-blue-700">Age</span>
+              <span className="font-heading text-2xl text-blue-700">{child.age}</span>
             </div>
           )}
+
+          {child.elopement_risk && (
+            <div className="bg-red-100 text-red-800 p-3 rounded-xl border-2 border-red-300 font-bold text-center">
+              ELOPEMENT RISK
+            </div>
+          )}
+
           {child.allergies && (Array.isArray(child.allergies) ? child.allergies.length > 0 : child.allergies) && (
             <div>
-              <p className="font-bold text-gray-600 mb-1">Allergies</p>
+              <p className="font-bold text-gray-600 mb-2">Allergies</p>
               <div className="flex flex-wrap gap-2">
                 {(Array.isArray(child.allergies) ? child.allergies : [child.allergies]).map((a, i) => (
-                  <span key={i} className="bg-red-50 text-red-700 px-3 py-1 rounded-full border border-red-200 text-xs font-bold">
+                  <span key={i} className="bg-red-50 text-red-700 px-3 py-1.5 rounded-full border border-red-200 text-xs font-bold">
                     {a}
                   </span>
                 ))}
               </div>
             </div>
           )}
-          {child.behaviors && (
+
+          {child.behaviors && (Array.isArray(child.behaviors) ? child.behaviors.length > 0 : child.behaviors) && (
             <div>
-              <p className="font-bold text-gray-600 mb-1">Behaviors</p>
-              <p className="bg-yellow-50 text-yellow-800 p-2 rounded-lg border border-yellow-200">{child.behaviors}</p>
+              <p className="font-bold text-gray-600 mb-2">Behaviors</p>
+              <div className="flex flex-wrap gap-2">
+                {(Array.isArray(child.behaviors) ? child.behaviors : [child.behaviors]).map((b, i) => (
+                  <span key={i} className="bg-yellow-50 text-yellow-800 px-3 py-1.5 rounded-full border border-yellow-200 text-xs font-bold">
+                    {b}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
-          {child.elopement_risk && (
-            <div className="bg-red-100 text-red-800 p-3 rounded-xl border-2 border-red-300 font-bold text-center">
-              ELOPEMENT RISK
-            </div>
-          )}
+
           {child.notes && (
             <div>
-              <p className="font-bold text-gray-600 mb-1">Notes</p>
-              <p className="bg-gray-50 p-2 rounded-lg border border-gray-200">{child.notes}</p>
+              <p className="font-bold text-gray-600 mb-2">Notes</p>
+              <p className="bg-gray-50 p-3 rounded-xl border border-gray-200 text-gray-700">{child.notes}</p>
             </div>
           )}
         </div>
@@ -344,50 +356,80 @@ export default function ChildProfile() {
         </ul>
       </div>
 
-      {/* Activity history grouped by date */}
-      {allLogs.length > 0 && (
-        <div className="camp-card">
-          <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Activity History</h2>
-          {Object.entries(
-            allLogs.reduce((groups, log) => {
-              const date = log.date || new Date(log.timestamp).toISOString().split('T')[0]
-              if (!groups[date]) groups[date] = []
-              groups[date].push(log)
-              return groups
-            }, {})
-          ).map(([date, logs]) => (
-            <div key={date} className="mb-4 last:mb-0">
-              <p className="text-sm font-bold text-gray-600 mb-2 border-b border-gray-200 pb-1">
-                {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-              </p>
-              <ul className="space-y-2">
-                {logs.map((log) => (
-                  <li key={log.id} className="py-2 px-3 bg-gray-50 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className={log.action === 'in' ? 'badge-in' : 'badge-out'}>
-                          {log.action === 'in' ? 'IN' : 'OUT'}
-                        </span>
-                        <span className="text-sm text-gray-500 ml-2">
-                          {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+      {/* Activity history grouped by date - paginated */}
+      {allLogs.length > 0 && (() => {
+        const grouped = Object.entries(
+          allLogs.reduce((groups, log) => {
+            const date = log.date || new Date(log.timestamp).toISOString().split('T')[0]
+            if (!groups[date]) groups[date] = []
+            groups[date].push(log)
+            return groups
+          }, {})
+        ).sort(([a], [b]) => b.localeCompare(a))
+
+        const totalPages = Math.ceil(grouped.length / HISTORY_PER_PAGE)
+        const paged = grouped.slice((historyPage - 1) * HISTORY_PER_PAGE, historyPage * HISTORY_PER_PAGE)
+
+        return (
+          <div className="camp-card">
+            <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Activity History</h2>
+            {paged.map(([date, logs]) => (
+              <div key={date} className="mb-4 last:mb-0">
+                <p className="text-sm font-bold text-gray-600 mb-2 border-b border-gray-200 pb-1">
+                  {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+                <ul className="space-y-2">
+                  {logs.map((log) => (
+                    <li key={log.id} className="py-2 px-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className={log.action === 'in' ? 'badge-in' : 'badge-out'}>
+                            {log.action === 'in' ? 'IN' : 'OUT'}
+                          </span>
+                          <span className="text-sm text-gray-500 ml-2">
+                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        {log.elapsed_display && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                            {log.elapsed_display}
+                          </span>
+                        )}
                       </div>
-                      {log.elapsed_display && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
-                          {log.elapsed_display}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Staff: {log.staff_name} &middot; Caregiver: {log.caregiver}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Staff: {log.staff_name} &middot; Caregiver: {log.caregiver}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
+                <button
+                  onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                  disabled={historyPage === 1}
+                  className="text-sm font-bold text-blue-500 disabled:text-gray-300 disabled:cursor-not-allowed"
+                >
+                  ← Newer
+                </button>
+                <span className="text-xs font-bold text-gray-400">
+                  Page {historyPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setHistoryPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={historyPage === totalPages}
+                  className="text-sm font-bold text-blue-500 disabled:text-gray-300 disabled:cursor-not-allowed"
+                >
+                  Older →
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Delete child */}
       <div className="camp-card text-center">
