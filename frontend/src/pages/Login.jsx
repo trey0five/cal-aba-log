@@ -34,7 +34,7 @@ export default function Login() {
           <img
             src={`${import.meta.env.BASE_URL}logo.jpeg`}
             alt="Camp CAL"
-            className="h-40 w-40 rounded-full border-4 border-yellow-400 shadow-xl float mb-4"
+            className="h-48 w-48 rounded-full border-4 border-yellow-400 shadow-xl float mb-4"
           />
           <h1 className="font-heading text-3xl rainbow-text">Camp CAL</h1>
           <p className="text-gray-500 font-semibold mt-1">Communication &bull; Adaptation &bull; Learning</p>

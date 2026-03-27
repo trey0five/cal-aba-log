@@ -22,7 +22,7 @@ export default function Navbar() {
     <nav className="camp-nav relative z-20">
       <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-heading text-xl text-white drop-shadow-lg wiggle">
-          <img src={`${import.meta.env.BASE_URL}logo.jpeg`} alt="Camp CAL" className="h-12 w-12 rounded-full border-2 border-yellow-400 shadow-lg" />
+          <img src={`${import.meta.env.BASE_URL}logo.jpeg`} alt="Camp CAL" className="h-14 w-14 rounded-full border-2 border-yellow-400 shadow-lg" />
           <span className="hidden sm:inline">Camp CAL</span>
         </Link>
         <div className="flex items-center gap-1 sm:gap-3">
