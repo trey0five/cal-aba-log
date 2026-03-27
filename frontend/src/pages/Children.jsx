@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import api from '../api/client'
@@ -6,14 +6,13 @@ import api from '../api/client'
 export default function Children() {
   const [children, setChildren] = useState([])
   const [showQR, setShowQR] = useState(null)
-  const qrRef = useRef(null)
 
   useEffect(() => {
     api.get('/children').then((res) => setChildren(res.data)).catch(() => {})
   }, [])
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this child?')) return
+    if (!confirm('Remove this camper?')) return
     await api.delete(`/children/${id}`)
     setChildren(children.filter((c) => c.id !== id))
   }
@@ -30,11 +29,16 @@ export default function Children() {
     const win = window.open('', '_blank')
     win.document.write(`
       <html><head><title>QR - ${child.name}</title>
-      <style>body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;}</style>
+      <style>
+        body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:'Fredoka One',sans-serif;}
+        h2{color:#8B6914;font-size:28px;}
+        p{color:#FF6B35;font-weight:bold;}
+      </style>
       </head><body>
-      <h2>${child.name}</h2>
+      <h2>🏕️ Camp CAL</h2>
+      <h3>${child.name}</h3>
       ${svgData}
-      <p style="margin-top:12px;color:#666;">Cal ABA Camp</p>
+      <p style="margin-top:12px;">Scan to Check In/Out</p>
       <script>window.print();window.close();</script>
       </body></html>
     `)
@@ -42,50 +46,64 @@ export default function Children() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Children</h1>
-        <Link to="/children/add" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
-          + Add Child
+    <div className="page-enter">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="font-heading text-2xl text-white drop-shadow-lg">👧 Campers</h1>
+        <Link to="/children/add" className="btn-camp btn-camp-green text-sm !py-2 !px-4">
+          ➕ Add Camper
         </Link>
       </div>
 
       {children.length === 0 ? (
-        <p className="text-gray-500 text-center mt-10">No children added yet.</p>
+        <div className="camp-card text-center py-10">
+          <p className="text-5xl mb-3">🎪</p>
+          <p className="font-heading text-xl text-gray-500">No campers yet!</p>
+          <Link to="/children/add" className="btn-camp btn-camp-green inline-block mt-4 text-sm">
+            Add Your First Camper
+          </Link>
+        </div>
       ) : (
         <ul className="space-y-3">
           {children.map((child) => (
-            <li key={child.id} className="bg-white rounded-lg shadow p-4">
+            <li key={child.id} className="camp-card">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold">{child.name}</p>
-                  {child.guardian && <p className="text-gray-500 text-sm">Guardian: {child.guardian}</p>}
+                  <p className="font-heading text-lg">🧒 {child.name}</p>
+                  {child.guardian && <p className="text-gray-500 text-sm font-semibold">👤 Guardian: {child.guardian}</p>}
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowQR(showQR === child.id ? null : child.id)}
-                    className="text-blue-600 text-sm hover:underline"
+                    className="btn-camp btn-camp-blue text-xs !py-1.5 !px-3 !text-sm !font-semibold"
                   >
-                    QR Code
+                    📱 QR
                   </button>
                   <button
                     onClick={() => handleDelete(child.id)}
-                    className="text-red-500 text-sm hover:underline"
+                    className="btn-camp btn-camp-red text-xs !py-1.5 !px-3 !text-sm !font-semibold"
                   >
-                    Remove
+                    ✕
                   </button>
                 </div>
               </div>
               {showQR === child.id && (
-                <div className="mt-4 flex flex-col items-center" ref={qrRef}>
+                <div className="mt-4 flex flex-col items-center bg-white rounded-xl p-4 border-2 border-dashed border-yellow-400">
                   <QRCodeSVG id={`qr-${child.id}`} value={getQRUrl(child.id)} size={200} />
-                  <p className="text-xs text-gray-400 mt-2 break-all max-w-[200px] text-center">{child.name}</p>
-                  <button
-                    onClick={() => printQR(child)}
-                    className="mt-2 text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
-                  >
-                    Print QR
-                  </button>
+                  <p className="text-sm text-gray-500 mt-2 font-bold">{child.name}</p>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => printQR(child)}
+                      className="btn-camp text-xs !py-1.5 !px-4 !text-sm"
+                    >
+                      🖨️ Print
+                    </button>
+                    <Link
+                      to={`/scan/${child.id}`}
+                      className="btn-camp btn-camp-green text-xs !py-1.5 !px-4 !text-sm"
+                    >
+                      Check In →
+                    </Link>
+                  </div>
                 </div>
               )}
             </li>

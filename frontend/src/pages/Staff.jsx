@@ -8,9 +8,7 @@ export default function Staff() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => {
-    loadStaff()
-  }, [])
+  useEffect(() => { loadStaff() }, [])
 
   const loadStaff = () => {
     api.get('/staff').then((res) => setStaff(res.data)).catch(() => {})
@@ -22,9 +20,9 @@ export default function Staff() {
     setSuccess('')
     try {
       await api.post('/staff', { name, pin })
+      setSuccess(`🎉 ${name} added to the team!`)
       setName('')
       setPin('')
-      setSuccess(`${name} added successfully`)
       loadStaff()
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to add staff')
@@ -32,7 +30,7 @@ export default function Staff() {
   }
 
   const handleDelete = async (id, staffName) => {
-    if (!confirm(`Remove ${staffName}?`)) return
+    if (!confirm(`Remove ${staffName} from staff?`)) return
     try {
       await api.delete(`/staff/${id}`)
       loadStaff()
@@ -42,43 +40,56 @@ export default function Staff() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Manage Staff</h1>
+    <div className="page-enter">
+      <h1 className="font-heading text-2xl text-white drop-shadow-lg mb-4">👥 Manage Staff</h1>
 
-      <form onSubmit={handleAdd} className="bg-white rounded-lg shadow p-4 mb-6 space-y-3">
-        <h2 className="font-semibold">Add Staff Member</h2>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        {success && <p className="text-green-600 text-sm">{success}</p>}
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="password"
-          placeholder="PIN (min 4 digits)"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          required
-          minLength={4}
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          Add Staff
-        </button>
-      </form>
+      <div className="camp-card mb-6">
+        <h2 className="font-heading text-lg mb-3">➕ Add Staff Member</h2>
+        {error && (
+          <div className="bg-red-50 border-2 border-red-200 text-red-600 p-3 rounded-xl mb-3 font-semibold text-sm">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-50 border-2 border-green-200 text-green-600 p-3 rounded-xl mb-3 font-semibold text-sm">
+            {success}
+          </div>
+        )}
+        <form onSubmit={handleAdd} className="space-y-3">
+          <input
+            type="text"
+            placeholder="👋 Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="camp-input"
+            required
+          />
+          <input
+            type="password"
+            placeholder="🔒 PIN (min 4 digits)"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            className="camp-input"
+            required
+            minLength={4}
+          />
+          <button type="submit" className="btn-camp btn-camp-green w-full">
+            ✅ Add to Team
+          </button>
+        </form>
+      </div>
 
       <ul className="space-y-2">
         {staff.map((s) => (
-          <li key={s.id} className="bg-white rounded-lg shadow p-3 flex items-center justify-between">
+          <li key={s.id} className="camp-card !p-3 flex items-center justify-between">
             <div>
-              <p className="font-medium">{s.name}</p>
-              <p className="text-gray-400 text-xs">{s.role}</p>
+              <p className="font-heading text-base">🧑‍🏫 {s.name}</p>
+              <p className="text-gray-400 text-xs font-bold uppercase">{s.role}</p>
             </div>
-            <button onClick={() => handleDelete(s.id, s.name)} className="text-red-500 text-sm hover:underline">
+            <button
+              onClick={() => handleDelete(s.id, s.name)}
+              className="btn-camp btn-camp-red text-xs !py-1.5 !px-3 !text-sm !font-semibold"
+            >
               Remove
             </button>
           </li>

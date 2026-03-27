@@ -28,34 +28,45 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16">
-      <div className="flex flex-col items-center mb-6">
-        <img src={`${import.meta.env.BASE_URL}logo.jpeg`} alt="Camp CAL" className="h-24 w-24 rounded-full mb-3" />
-        <h1 className="text-2xl font-bold">Camp CAL</h1>
-        <p className="text-gray-500 text-sm">Communication | Adaption | Learning</p>
+    <div className="flex items-center justify-center min-h-[80vh]">
+      <div className="camp-card max-w-sm w-full text-center">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src={`${import.meta.env.BASE_URL}logo.jpeg`}
+            alt="Camp CAL"
+            className="h-28 w-28 rounded-full border-4 border-yellow-400 shadow-xl float mb-4"
+          />
+          <h1 className="font-heading text-3xl rainbow-text">Camp CAL</h1>
+          <p className="text-gray-500 font-semibold mt-1">Communication &bull; Adaptation &bull; Learning</p>
+          <p className="text-sm text-gray-400 mt-1">☀️ Where Fun Meets Clinical Excellence ☀️</p>
+        </div>
+        {error && (
+          <div className="bg-red-50 border-2 border-red-200 text-red-600 p-3 rounded-xl mb-4 font-semibold text-sm">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            placeholder="👋 Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="camp-input"
+            required
+          />
+          <input
+            type="password"
+            placeholder="🔒 PIN"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            className="camp-input"
+            required
+          />
+          <button type="submit" className="btn-camp btn-camp-green w-full">
+            🏕️ Enter Camp
+          </button>
+        </form>
       </div>
-      {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="password"
-          placeholder="PIN"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          Login
-        </button>
-      </form>
     </div>
   )
 }

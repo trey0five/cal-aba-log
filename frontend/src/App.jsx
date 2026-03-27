@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import AnimatedBackground from './components/AnimatedBackground'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
 import Setup from './pages/Setup'
@@ -19,9 +20,10 @@ export default function App() {
   const { user } = useAuth()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
+      <AnimatedBackground />
       {user && <Navbar />}
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 relative z-10 page-enter">
         <Routes>
           <Route path="/setup" element={<Setup />} />
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />

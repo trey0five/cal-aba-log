@@ -20,43 +20,71 @@ export default function Dashboard() {
   })
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-1">Welcome, {user.name}</h1>
-      <p className="text-gray-500 mb-6">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    <div className="page-enter">
+      {/* Welcome banner */}
+      <div className="camp-card-wood text-center mb-6">
+        <h1 className="font-heading text-2xl sm:text-3xl drop-shadow-lg relative z-10">
+          🌞 Welcome, {user.name}!
+        </h1>
+        <p className="text-white/80 mt-1 relative z-10 font-semibold">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-3xl font-bold text-green-600">{checkedIn.length}</p>
-          <p className="text-gray-500 text-sm">Checked In</p>
+        <div className="stat-card stat-card-green">
+          <p className="text-5xl font-heading drop-shadow-md">{checkedIn.length}</p>
+          <p className="text-white/90 font-bold mt-1">✅ Checked In</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-3xl font-bold text-blue-600">{children.length}</p>
-          <p className="text-gray-500 text-sm">Total Children</p>
+        <div className="stat-card stat-card-blue">
+          <p className="text-5xl font-heading drop-shadow-md">{children.length}</p>
+          <p className="text-white/90 font-bold mt-1">👧 Total Campers</p>
         </div>
       </div>
 
+      {/* Quick actions */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <Link to="/scan" className="bg-blue-600 text-white p-4 rounded-lg shadow text-center hover:bg-blue-700">
-          Scan QR Code
+        <Link to="/scan" className="btn-camp btn-camp-blue text-center block wiggle">
+          📷 Scan QR
         </Link>
-        <Link to="/children/add" className="bg-green-600 text-white p-4 rounded-lg shadow text-center hover:bg-green-700">
-          Add Child
+        <Link to="/children/add" className="btn-camp btn-camp-green text-center block wiggle">
+          ➕ Add Camper
         </Link>
       </div>
 
+      {/* Currently checked in */}
       {checkedIn.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="font-semibold mb-3">Currently Checked In</h2>
+        <div className="camp-card">
+          <h2 className="font-heading text-xl mb-3 text-green-700">🏕️ Currently at Camp</h2>
           <ul className="space-y-2">
             {checkedIn.map((child) => (
-              <li key={child.id} className="flex items-center justify-between py-1 border-b last:border-0">
-                <span>{child.name}</span>
-                <Link to={`/scan/${child.id}`} className="text-blue-600 text-sm hover:underline">
-                  Check Out
+              <li key={child.id} className="flex items-center justify-between py-2 px-3 bg-green-50 rounded-xl border border-green-100">
+                <span className="font-bold text-gray-700">🧒 {child.name}</span>
+                <Link to={`/scan/${child.id}`} className="badge-out text-xs hover:scale-105 transition-transform cursor-pointer">
+                  Check Out →
                 </Link>
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {checkedIn.length === 0 && children.length > 0 && (
+        <div className="camp-card text-center">
+          <p className="text-4xl mb-2">🌅</p>
+          <p className="font-heading text-lg text-gray-500">No campers checked in yet today</p>
+          <p className="text-gray-400 text-sm mt-1">Scan a QR code to check someone in!</p>
+        </div>
+      )}
+
+      {children.length === 0 && (
+        <div className="camp-card text-center">
+          <p className="text-4xl mb-2">🎪</p>
+          <p className="font-heading text-lg text-gray-500">No campers added yet</p>
+          <Link to="/children/add" className="text-blue-500 font-bold hover:underline mt-1 inline-block">
+            Add your first camper →
+          </Link>
         </div>
       )}
     </div>
