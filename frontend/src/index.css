@@ -188,88 +188,54 @@ h1, h2, h3, .font-heading {
   to { left: 110vw; }
 }
 
-/* Water / Pool area at bottom */
-.water-area {
+/* Ocean waves at bottom */
+.ocean {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 80px;
-  background: linear-gradient(180deg, rgba(0, 188, 212, 0.4) 0%, rgba(0, 151, 167, 0.6) 100%);
+  height: 120px;
   z-index: -1;
   overflow: hidden;
 }
 
-.wave {
+.ocean-wave {
   position: absolute;
-  width: 200%;
-  height: 40px;
   bottom: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 40px,
-    rgba(255, 255, 255, 0.15) 40px,
-    rgba(255, 255, 255, 0.15) 80px
-  );
-  animation: wave-move 4s linear infinite;
+  left: -100%;
+  width: 300%;
+  height: 100%;
 }
 
-.wave:nth-child(2) {
-  bottom: 15px;
-  opacity: 0.5;
-  animation-duration: 6s;
-  animation-direction: reverse;
-}
-
-.wave:nth-child(3) {
-  bottom: 30px;
-  opacity: 0.3;
-  animation-duration: 5s;
-}
-
-@keyframes wave-move {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-/* Water Slide */
-.waterslide {
-  position: fixed;
-  bottom: 60px;
-  right: 20px;
-  width: 120px;
-  height: 180px;
-  z-index: -1;
-  opacity: 0.7;
-}
-
-.slide-track {
+.ocean-wave svg {
   position: absolute;
+  bottom: 0;
   width: 100%;
   height: 100%;
-  border: 8px solid var(--camp-orange);
-  border-radius: 0 60px 20px 0;
-  border-left: none;
-  border-bottom: none;
-  transform: rotate(-15deg);
 }
 
-.slide-track::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  right: -5px;
-  width: 30px;
-  height: 30px;
-  background: var(--water-blue);
-  border-radius: 50%;
-  animation: splash 2s ease-in-out infinite;
+.ocean-wave-1 {
+  animation: ocean-drift 7s linear infinite;
 }
 
-@keyframes splash {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.5); opacity: 0.3; }
+.ocean-wave-2 {
+  animation: ocean-drift 11s linear infinite;
+  animation-delay: -3s;
+}
+
+.ocean-wave-3 {
+  animation: ocean-drift 9s linear infinite;
+  animation-delay: -6s;
+}
+
+.ocean-wave-4 {
+  animation: ocean-drift 13s linear infinite;
+  animation-delay: -2s;
+}
+
+@keyframes ocean-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(33.33%); }
 }
 
 /* Grass blades */
