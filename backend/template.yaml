@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Camp CAL Check-In API (Lambda + API Gateway)
+
+Parameters:
+  S3Bucket:
+    Type: String
+    Default: villagefinders-provider-docs
+    Description: S3 bucket for data storage
+  S3Prefix:
+    Type: String
+    Default: cal-aba-therapy
+    Description: S3 key prefix for Camp CAL data
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    Description: Secret key for JWT token signing
+  AllowedOrigin:
+    Type: String
+    Default: https://campcalaba.netlify.app
+    Description: Frontend URL for CORS
+
+Resources:
+
+  # IAM Role for Lambda
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: camp-cal-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: camp-cal-s3-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3Bucket}'
+                  - !Sub 'arn:aws:s3:::${S3Bucket}/${S3Prefix}/*'
+        - PolicyName: camp-cal-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 'arn:aws:logs:*:*:*'
+
+  # Lambda Function
+  CampCalFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: camp-cal-api
+      Runtime: python3.12
+      Handler: lambda_function.lambda_handler
+      Code:
+        ZipFile: |
+          # Placeholder - deploy actual code with deploy.sh
+          def lambda_handler(event, context):
+              return {'statusCode': 200, 'body': 'Deploy code first'}
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3Bucket
+          S3_PREFIX: !Ref S3Prefix
+          JWT_SECRET: !Ref JwtSecret
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: camp-cal-api
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+          - http://localhost:5173
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        MaxAge: 86400
+
+  # API Gateway Integration
+  ApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGateway
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt CampCalFunction.Arn
+      PayloadFormatVersion: '1.0'
+
+  # Catch-all route
+  ApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref ApiGateway
+      RouteKey: '$default'
+      Target: !Sub 'integrations/${ApiIntegration}'
+
+  # API Stage
+  ApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref ApiGateway
+      StageName: '$default'
+      AutoDeploy: true
+
+  # Permission for API Gateway to invoke Lambda
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CampCalFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*'
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL (set this as VITE_API_URL in Netlify)
+    Value: !GetAtt ApiGateway.ApiEndpoint
+  LambdaFunctionName:
+    Description: Lambda function name for code deploys
+    Value: !Ref CampCalFunction
