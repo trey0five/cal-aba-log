@@ -55,8 +55,8 @@ h1, h2, h3, .font-heading {
   position: fixed;
   top: 25px;
   right: 50px;
-  width: 110px;
-  height: 110px;
+  width: 160px;
+  height: 160px;
   background: radial-gradient(circle, #FFF9C4 0%, #FFF176 25%, var(--sun-yellow) 50%, var(--sun-orange) 100%);
   border-radius: 50%;
   box-shadow:

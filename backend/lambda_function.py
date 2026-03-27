@@ -84,7 +84,7 @@ def create_token(payload):
     body = _b64url(json.dumps(payload).encode())
     sig_input = f"{header}.{body}".encode()
     sig = hmac.new(JWT_SECRET.encode(), sig_input, hashlib.sha256).digest()
-    return f"{header}.{_b64url(sig_input=None or sig)}.{body}"
+    return f"{header}.{_b64url(sig)}.{body}"
 
 
 def verify_token(token):
