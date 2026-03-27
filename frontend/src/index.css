@@ -53,75 +53,59 @@ h1, h2, h3, .font-heading {
 /* Sun */
 .sun {
   position: fixed;
-  top: 30px;
-  right: 60px;
-  width: 100px;
-  height: 100px;
-  background: radial-gradient(circle, #FFF176 0%, var(--sun-yellow) 40%, var(--sun-orange) 100%);
+  top: 25px;
+  right: 50px;
+  width: 110px;
+  height: 110px;
+  background: radial-gradient(circle, #FFF9C4 0%, #FFF176 25%, var(--sun-yellow) 50%, var(--sun-orange) 100%);
   border-radius: 50%;
   box-shadow:
-    0 0 40px rgba(255, 215, 0, 0.6),
-    0 0 80px rgba(255, 215, 0, 0.3),
-    0 0 120px rgba(255, 140, 0, 0.2);
-  animation: sun-pulse 4s ease-in-out infinite, sun-float 8s ease-in-out infinite;
+    0 0 60px rgba(255, 215, 0, 0.7),
+    0 0 120px rgba(255, 215, 0, 0.4),
+    0 0 200px rgba(255, 140, 0, 0.2);
+  animation: sun-float 8s ease-in-out infinite;
   z-index: -1;
 }
 
+/* Inner glow ring - pulses */
 .sun::before {
   content: '';
   position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+  top: -30px;
+  left: -30px;
+  right: -30px;
+  bottom: -30px;
+  background: radial-gradient(circle, rgba(255, 249, 196, 0.4) 30%, rgba(255, 215, 0, 0.2) 50%, transparent 70%);
   border-radius: 50%;
-  animation: sun-rays 3s ease-in-out infinite;
+  animation: sun-glow 3s ease-in-out infinite;
 }
 
-/* Sun rays */
-.sun-ray {
+/* Outer halo - breathes */
+.sun::after {
+  content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 140px;
-  height: 4px;
-  background: linear-gradient(90deg, var(--sun-yellow), transparent);
-  transform-origin: 0 50%;
-  animation: ray-rotate 20s linear infinite;
-}
-
-.sun-ray:nth-child(1) { transform: rotate(0deg); }
-.sun-ray:nth-child(2) { transform: rotate(30deg); }
-.sun-ray:nth-child(3) { transform: rotate(60deg); }
-.sun-ray:nth-child(4) { transform: rotate(90deg); }
-.sun-ray:nth-child(5) { transform: rotate(120deg); }
-.sun-ray:nth-child(6) { transform: rotate(150deg); }
-.sun-ray:nth-child(7) { transform: rotate(180deg); }
-.sun-ray:nth-child(8) { transform: rotate(210deg); }
-.sun-ray:nth-child(9) { transform: rotate(240deg); }
-.sun-ray:nth-child(10) { transform: rotate(270deg); }
-.sun-ray:nth-child(11) { transform: rotate(300deg); }
-.sun-ray:nth-child(12) { transform: rotate(330deg); }
-
-@keyframes sun-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  top: -60px;
+  left: -60px;
+  right: -60px;
+  bottom: -60px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 20%, rgba(255, 140, 0, 0.08) 40%, transparent 65%);
+  border-radius: 50%;
+  animation: sun-halo 5s ease-in-out infinite;
 }
 
 @keyframes sun-float {
-  0%, 100% { top: 30px; }
-  50% { top: 20px; }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-@keyframes sun-rays {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.3); opacity: 1; }
+@keyframes sun-glow {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
 }
 
-@keyframes ray-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes sun-halo {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.8; }
 }
 
 /* Clouds */
@@ -194,7 +178,7 @@ h1, h2, h3, .font-heading {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 120px;
+  height: 150px;
   z-index: -1;
   overflow: hidden;
 }
@@ -202,40 +186,26 @@ h1, h2, h3, .font-heading {
 .ocean-wave {
   position: absolute;
   bottom: 0;
-  left: -100%;
-  width: 300%;
+  left: 0;
+  width: 200%;
   height: 100%;
 }
 
 .ocean-wave svg {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
+  width: 50%;
   height: 100%;
+  float: left;
 }
 
-.ocean-wave-1 {
-  animation: ocean-drift 7s linear infinite;
-}
+.ocean-wave-1 { animation: ocean-scroll 6s linear infinite; }
+.ocean-wave-2 { animation: ocean-scroll 8s linear infinite reverse; }
+.ocean-wave-3 { animation: ocean-scroll 10s linear infinite; animation-delay: -3s; }
+.ocean-wave-4 { animation: ocean-scroll 7s linear infinite reverse; animation-delay: -2s; }
+.ocean-wave-5 { animation: ocean-scroll 9s linear infinite; animation-delay: -5s; }
 
-.ocean-wave-2 {
-  animation: ocean-drift 11s linear infinite;
-  animation-delay: -3s;
-}
-
-.ocean-wave-3 {
-  animation: ocean-drift 9s linear infinite;
-  animation-delay: -6s;
-}
-
-.ocean-wave-4 {
-  animation: ocean-drift 13s linear infinite;
-  animation-delay: -2s;
-}
-
-@keyframes ocean-drift {
+@keyframes ocean-scroll {
   from { transform: translateX(0); }
-  to { transform: translateX(33.33%); }
+  to { transform: translateX(-50%); }
 }
 
 /* Grass blades */
