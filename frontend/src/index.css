@@ -382,22 +382,33 @@ h1, h2, h3, .font-heading {
 
 /* Back button - uniform style */
 .back-btn {
-  background: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, #5b4a1e, #8B6914);
   color: white;
   font-family: 'Nunito', sans-serif;
   font-weight: 800;
   font-size: 0.85rem;
   padding: 8px 18px;
   border-radius: 50px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(4px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, #6b5a2e, #A0781E);
   transform: translateX(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+/* Page header bar */
+.page-header {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 12px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* Status badges */

@@ -18,7 +18,7 @@ export default function Children() {
 
   return (
     <div className="page-enter">
-      <div className="flex items-center justify-between mb-5">
+      <div className="page-header flex items-center justify-between mb-5">
         <h1 className="font-heading text-2xl text-white drop-shadow-lg">Campers</h1>
         <Link to="/children/add" className="btn-camp btn-camp-green text-sm !py-2 !px-4">
           + Add Camper

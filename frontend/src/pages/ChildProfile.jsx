@@ -185,16 +185,16 @@ export default function ChildProfile() {
     <div className="page-enter max-w-lg mx-auto space-y-4">
       {showConfetti && <Confetti />}
 
-      {/* Back button */}
-      <div className="flex justify-end">
+      {/* Page header */}
+      <div className="page-header flex items-center justify-between">
+        <h1 className="font-heading text-2xl text-white drop-shadow-lg">{child.name}</h1>
         <button onClick={() => navigate('/children')} className="back-btn">
           ← Back
         </button>
       </div>
 
-      {/* Header with QR */}
+      {/* Status + QR */}
       <div className="camp-card">
-        <h1 className="font-heading text-3xl text-center mb-1">{child.name}</h1>
 
         <div className="flex justify-center mb-2">
           <div className={`px-4 py-1.5 rounded-full text-sm font-bold ${
@@ -300,10 +300,7 @@ export default function ChildProfile() {
         <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Camper Information</h2>
         <div className="space-y-3 text-sm">
           {child.age && (
-            <div className="bg-blue-50 rounded-xl p-3 border border-blue-200 flex items-center justify-between">
-              <span className="font-bold text-blue-700">Age</span>
-              <span className="font-heading text-2xl text-blue-700">{child.age}</span>
-            </div>
+            <p className="font-bold text-gray-700">Age: {child.age}</p>
           )}
 
           {child.elopement_risk && (

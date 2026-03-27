@@ -51,7 +51,9 @@ export default function Staff() {
 
   return (
     <div className="page-enter">
-      <h1 className="font-heading text-2xl text-white drop-shadow-lg mb-4">👥 Manage Staff</h1>
+      <div className="page-header mb-4">
+        <h1 className="font-heading text-2xl text-white drop-shadow-lg">Manage Staff</h1>
+      </div>
 
       <div className="camp-card mb-6">
         <h2 className="font-heading text-lg mb-3">➕ Add Staff Member</h2>
@@ -76,7 +78,7 @@ export default function Staff() {
           />
           <input
             type="password"
-            placeholder="🔒 PIN (min 4 digits)"
+            placeholder="Password (min 4 characters)"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             className="camp-input"
@@ -91,15 +93,26 @@ export default function Staff() {
 
       <ul className="space-y-2">
         {staff.map((s) => (
-          <li key={s.id} className="camp-card !p-3 flex items-center justify-between">
-            <div>
-              <p className="font-heading text-base">🧑‍🏫 {s.name}</p>
-              <p className="text-gray-400 text-xs font-bold uppercase">{s.role}</p>
+          <li key={s.id} className="camp-card !p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <span className="text-lg">👤</span>
+              </div>
+              <div className="min-w-0">
+                <p className="font-heading text-base truncate">{s.name}</p>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                  s.role === 'admin'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {s.role.toUpperCase()}
+                </span>
+              </div>
             </div>
             {s.role !== 'admin' && (
               <button
                 onClick={() => handleDelete(s.id, s.name)}
-                className="btn-camp btn-camp-red text-xs !py-1.5 !px-3 !text-sm !font-semibold"
+                className="btn-camp btn-camp-red !text-xs !py-1.5 !px-3 !font-semibold shrink-0"
               >
                 Remove
               </button>

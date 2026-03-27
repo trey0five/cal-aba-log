@@ -86,7 +86,9 @@ export default function Logs() {
   if (!selectedChild) {
     return (
       <div className="page-enter">
-        <h1 className="font-heading text-2xl text-white drop-shadow-lg mb-4">Activity Logs</h1>
+        <div className="page-header mb-4">
+          <h1 className="font-heading text-2xl text-white drop-shadow-lg">Activity Logs</h1>
+        </div>
 
         {children.length === 0 ? (
           <div className="camp-card text-center py-8">
@@ -127,7 +129,7 @@ export default function Logs() {
 
     return (
       <div className="page-enter">
-        <div className="flex items-center justify-between mb-4">
+        <div className="page-header flex items-center justify-between mb-4">
           <div>
             <h1 className="font-heading text-xl text-white drop-shadow-lg">{selectedChild.name}</h1>
             <p className="text-white/80 text-sm font-bold">{formatDate(selectedDate)}</p>
@@ -224,7 +226,7 @@ export default function Logs() {
 
   return (
     <div className="page-enter">
-      <div className="flex items-center justify-between mb-4">
+      <div className="page-header flex items-center justify-between mb-4">
         <h1 className="font-heading text-2xl text-white drop-shadow-lg">{selectedChild.name}</h1>
         <button
           onClick={() => { setSelectedChild(null); setAllChildLogs([]) }}

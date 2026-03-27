@@ -16,31 +16,30 @@ export default function ChangePin() {
     setSuccess('')
 
     if (newPin !== confirmPin) {
-      setError('New PINs do not match')
+      setError('New passwords do not match')
       return
     }
 
     try {
       await api.post('/change-pin', { current_pin: currentPin, new_pin: newPin })
-      setSuccess('PIN changed successfully!')
+      setSuccess('Password changed successfully!')
       setCurrentPin('')
       setNewPin('')
       setConfirmPin('')
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to change PIN')
+      setError(err.response?.data?.error || 'Failed to change password')
     }
   }
 
   return (
     <div className="page-enter max-w-sm mx-auto">
-      <div className="flex justify-end mb-2">
+      <div className="page-header flex items-center justify-between mb-4">
+        <h1 className="font-heading text-2xl text-white drop-shadow-lg">Change Password</h1>
         <button onClick={() => navigate('/')} className="back-btn">
           ← Back
         </button>
       </div>
       <div className="camp-card">
-        <h1 className="font-heading text-2xl text-center mb-6">Change PIN</h1>
-
         {error && (
           <div className="bg-red-50 border-2 border-red-200 text-red-600 p-3 rounded-xl mb-4 font-semibold text-sm">
             {error}
@@ -54,7 +53,7 @@ export default function ChangePin() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Current PIN</label>
+            <label className="block text-sm font-bold text-gray-600 mb-1">Current Password</label>
             <input
               type="password"
               value={currentPin}
@@ -65,7 +64,7 @@ export default function ChangePin() {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">New PIN</label>
+            <label className="block text-sm font-bold text-gray-600 mb-1">New Password</label>
             <input
               type="password"
               value={newPin}
@@ -73,10 +72,11 @@ export default function ChangePin() {
               className="camp-input"
               required
               minLength={4}
+              placeholder="Letters, numbers, symbols"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Confirm New PIN</label>
+            <label className="block text-sm font-bold text-gray-600 mb-1">Confirm New Password</label>
             <input
               type="password"
               value={confirmPin}
@@ -88,7 +88,7 @@ export default function ChangePin() {
           </div>
           <div className="pt-2">
             <button type="submit" className="btn-camp btn-camp-green w-full">
-              Update PIN
+              Update Password
             </button>
           </div>
         </form>

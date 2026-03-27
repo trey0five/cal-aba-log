@@ -27,7 +27,7 @@ export default function Navbar() {
           <img
             src={`${import.meta.env.BASE_URL}logo.jpeg`}
             alt="Camp CAL"
-            className="h-12 w-12 rounded-full border-2 border-yellow-400 shadow-lg mr-1"
+            className="h-14 w-14 rounded-full border-2 border-yellow-400 shadow-lg mr-1"
           />
           <span className="font-heading text-white text-lg leading-tight drop-shadow-md hidden sm:block">
             CAMP CAL
@@ -67,7 +67,7 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
                   >
-                    Change PIN
+                    Change Password
                   </Link>
                   <button
                     onClick={() => { setMenuOpen(false); logout() }}

@@ -36,7 +36,7 @@ export default function Login() {
             alt="Camp CAL"
             className="h-48 w-48 rounded-full border-4 border-yellow-400 shadow-xl float mb-4"
           />
-          <h1 className="font-heading text-3xl rainbow-text">Camp CAL</h1>
+          <h1 className="font-heading text-3xl rainbow-text">CAMP CAL</h1>
           <p className="text-gray-500 font-semibold mt-1">Communication &bull; Adaptation &bull; Learning</p>
           <p className="text-sm text-gray-400 mt-1">☀️ Where Fun Meets Clinical Excellence ☀️</p>
         </div>
@@ -56,7 +56,7 @@ export default function Login() {
           />
           <input
             type="password"
-            placeholder="🔒 PIN"
+            placeholder="🔒 Password"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             className="camp-input"
