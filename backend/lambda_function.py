@@ -214,16 +214,55 @@ def handle_add_child(event, body):
     if not name:
         return cors_response(400, {'error': 'Name required'})
 
+    caregivers = body.get('caregivers', [])
+    if not caregivers or len(caregivers) == 0:
+        return cors_response(400, {'error': 'At least one caregiver is required'})
+
     children = read_json('children.json', [])
     child = {
         'id': generate_id(),
         'name': name,
-        'guardian': body.get('guardian', ''),
+        'age': body.get('age', ''),
+        'allergies': body.get('allergies', ''),
+        'behaviors': body.get('behaviors', ''),
+        'elopement_risk': body.get('elopement_risk', False),
         'notes': body.get('notes', ''),
+        'caregivers': caregivers,
         'created_at': datetime.now(timezone.utc).isoformat(),
     }
     children.append(child)
     write_json('children.json', children)
+    return cors_response(200, child)
+
+
+def handle_update_child(event, child_id, body):
+    user = get_staff_from_token(event)
+    if not user:
+        return cors_response(401, {'error': 'Unauthorized'})
+
+    children = read_json('children.json', [])
+    child = next((c for c in children if c['id'] == child_id), None)
+    if not child:
+        return cors_response(404, {'error': 'Child not found'})
+
+    # Update fields
+    for field in ['name', 'age', 'allergies', 'behaviors', 'elopement_risk', 'notes', 'caregivers']:
+        if field in body:
+            child[field] = body[field]
+
+    write_json('children.json', children)
+    return cors_response(200, child)
+
+
+def handle_get_child(event, child_id):
+    user = get_staff_from_token(event)
+    if not user:
+        return cors_response(401, {'error': 'Unauthorized'})
+
+    children = read_json('children.json', [])
+    child = next((c for c in children if c['id'] == child_id), None)
+    if not child:
+        return cors_response(404, {'error': 'Child not found'})
     return cors_response(200, child)
 
 
@@ -245,9 +284,13 @@ def handle_checkin(event, body):
 
     child_id = body.get('child_id', '')
     action = body.get('action', '')  # 'in' or 'out'
+    caregiver = body.get('caregiver', '').strip()
 
     if not child_id or action not in ('in', 'out'):
         return cors_response(400, {'error': 'child_id and action (in/out) required'})
+
+    if not caregiver:
+        return cors_response(400, {'error': 'A caregiver must be selected'})
 
     # Verify child exists
     children = read_json('children.json', [])
@@ -264,6 +307,7 @@ def handle_checkin(event, body):
         'child_id': child_id,
         'child_name': child['name'],
         'action': action,
+        'caregiver': caregiver,
         'staff_id': user['id'],
         'staff_name': user['name'],
         'timestamp': datetime.now(timezone.utc).isoformat(),
@@ -280,9 +324,35 @@ def handle_get_logs(event):
 
     params = event.get('queryStringParameters') or {}
     date = params.get('date', datetime.now(timezone.utc).strftime('%Y-%m-%d'))
+    show_deleted = params.get('show_deleted', 'false') == 'true'
     log_file = f"logs/{date}.json"
     logs = read_json(log_file, [])
+    if not show_deleted:
+        logs = [l for l in logs if not l.get('deleted')]
     return cors_response(200, logs)
+
+
+def handle_delete_log(event, body):
+    """Soft-delete a log entry."""
+    user = get_staff_from_token(event)
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
+
+    log_id = body.get('log_id', '')
+    date = body.get('date', '')
+    if not log_id or not date:
+        return cors_response(400, {'error': 'log_id and date required'})
+
+    log_file = f"logs/{date}.json"
+    logs = read_json(log_file, [])
+    for log in logs:
+        if log['id'] == log_id:
+            log['deleted'] = True
+            log['deleted_by'] = user['name']
+            log['deleted_at'] = datetime.now(timezone.utc).isoformat()
+            break
+    write_json(log_file, logs)
+    return cors_response(200, {'message': 'Log soft-deleted'})
 
 
 def handle_check_setup():
@@ -329,6 +399,12 @@ def lambda_handler(event, context):
         return handle_get_children(event)
     elif path == '/api/children' and method == 'POST':
         return handle_add_child(event, body)
+    elif path.startswith('/api/children/') and method == 'GET':
+        child_id = path.split('/')[-1]
+        return handle_get_child(event, child_id)
+    elif path.startswith('/api/children/') and method == 'PUT':
+        child_id = path.split('/')[-1]
+        return handle_update_child(event, child_id, body)
     elif path.startswith('/api/children/') and method == 'DELETE':
         child_id = path.split('/')[-1]
         return handle_delete_child(event, child_id)
@@ -336,5 +412,7 @@ def lambda_handler(event, context):
         return handle_checkin(event, body)
     elif path == '/api/logs' and method == 'GET':
         return handle_get_logs(event)
+    elif path == '/api/logs/delete' and method == 'POST':
+        return handle_delete_log(event, body)
     else:
         return cors_response(404, {'error': 'Not found'})

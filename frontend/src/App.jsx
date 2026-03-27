@@ -7,7 +7,7 @@ import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import Children from './pages/Children'
 import AddChild from './pages/AddChild'
-import Scan from './pages/Scan'
+import ChildProfile from './pages/ChildProfile'
 import Logs from './pages/Logs'
 import Staff from './pages/Staff'
 
@@ -30,8 +30,7 @@ export default function App() {
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/children" element={<ProtectedRoute><Children /></ProtectedRoute>} />
           <Route path="/children/add" element={<ProtectedRoute><AddChild /></ProtectedRoute>} />
-          <Route path="/scan/:childId" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
-          <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
+          <Route path="/child/:childId" element={<ProtectedRoute><ChildProfile /></ProtectedRoute>} />
           <Route path="/logs" element={<ProtectedRoute><Logs /></ProtectedRoute>} />
           <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
         </Routes>
