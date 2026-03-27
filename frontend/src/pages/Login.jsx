@@ -29,12 +29,12 @@ export default function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-[80vh]">
-      <div className="camp-card max-w-sm w-full text-center">
+      <div className="camp-card max-w-sm w-full text-center sm:bg-white/[0.92] bg-transparent !border-transparent sm:!border-white/50 !shadow-none sm:!shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
         <div className="flex flex-col items-center mb-6">
           <img
             src={`${import.meta.env.BASE_URL}logo.jpeg`}
             alt="Camp CAL"
-            className="h-48 w-48 rounded-full border-4 border-yellow-400 shadow-xl float mb-4"
+            className="h-48 w-48 rounded-full border-4 border-yellow-400 shadow-xl float mb-4 bg-white"
           />
           <h1 className="font-heading text-3xl rainbow-text">CAMP CAL</h1>
           <p className="text-gray-500 font-semibold mt-1">Communication &bull; Adaptation &bull; Learning</p>
