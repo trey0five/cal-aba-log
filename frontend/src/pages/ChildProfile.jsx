@@ -1,18 +1,62 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import api from '../api/client'
+
+function ElapsedTimer({ since }) {
+  const [elapsed, setElapsed] = useState('')
+
+  useEffect(() => {
+    const calc = () => {
+      const diff = Math.floor((Date.now() - new Date(since).getTime()) / 1000)
+      const h = Math.floor(diff / 3600)
+      const m = Math.floor((diff % 3600) / 60)
+      const s = diff % 60
+      setElapsed(`${h}h ${m}m ${s}s`)
+    }
+    calc()
+    const interval = setInterval(calc, 1000)
+    return () => clearInterval(interval)
+  }, [since])
+
+  return <span>{elapsed}</span>
+}
+
+function Confetti() {
+  const colors = ['#FF6B35', '#FFD700', '#4CAF50', '#1a9fff', '#7B1FA2', '#E53935']
+  const pieces = Array.from({ length: 40 }, (_, i) => ({
+    id: i,
+    color: colors[i % colors.length],
+    x: `${(Math.random() - 0.5) * 700}px`,
+    y: `${(Math.random() - 0.5) * 700}px`,
+    delay: `${Math.random() * 0.4}s`,
+    size: Math.random() * 10 + 6,
+  }))
+  return (
+    <div className="confetti-burst">
+      {pieces.map((p) => (
+        <div
+          key={p.id}
+          className="confetti-piece"
+          style={{ '--x': p.x, '--y': p.y, backgroundColor: p.color, width: p.size, height: p.size, borderRadius: Math.random() > 0.5 ? '50%' : '2px', animationDelay: p.delay }}
+        />
+      ))}
+    </div>
+  )
+}
 
 export default function ChildProfile() {
   const { childId } = useParams()
   const navigate = useNavigate()
   const [child, setChild] = useState(null)
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState(null) // 'in', 'out', or null
+  const [checkinTime, setCheckinTime] = useState(null)
   const [selectedCaregiver, setSelectedCaregiver] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [showConfetti, setShowConfetti] = useState(false)
   const [todayLogs, setTodayLogs] = useState([])
+  const [allLogs, setAllLogs] = useState([])
 
   useEffect(() => {
     loadData()
@@ -20,15 +64,26 @@ export default function ChildProfile() {
 
   const loadData = async () => {
     try {
-      const [childRes, logsRes] = await Promise.all([
+      const [childRes, logsRes, allLogsRes] = await Promise.all([
         api.get(`/children/${childId}`),
         api.get('/logs'),
+        api.get(`/children/${childId}/logs`),
       ])
       setChild(childRes.data)
+      setAllLogs(allLogsRes.data)
       const childLogs = logsRes.data.filter((l) => l.child_id === childId)
       setTodayLogs(childLogs)
       if (childLogs.length > 0) {
-        setStatus(childLogs[childLogs.length - 1].action)
+        const last = childLogs[childLogs.length - 1]
+        setStatus(last.action)
+        if (last.action === 'in') {
+          setCheckinTime(last.timestamp)
+        } else {
+          setCheckinTime(null)
+        }
+      } else {
+        setStatus(null)
+        setCheckinTime(null)
       }
     } catch {
       setError('Could not load camper information')
@@ -44,69 +99,61 @@ export default function ChildProfile() {
     const svg = document.getElementById('child-qr')
     if (!svg) return
     const svgData = new XMLSerializer().serializeToString(svg)
-    const win = window.open('', '_blank')
-    win.document.write(`
-      <html><head><title>QR - ${child.name}</title>
+    const printWindow = window.open('', '_blank')
+    printWindow.document.write(`
+      <html>
+      <head><title>QR Code - ${child.name}</title>
       <style>
-        body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;}
-        h2{color:#8B6914;font-size:28px;margin-bottom:4px;}
-        h3{color:#333;font-size:22px;margin-top:0;}
-        p{color:#FF6B35;font-weight:bold;}
+        body { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; margin:0; }
+        h2 { color:#8B6914; font-size:28px; margin-bottom:4px; }
+        h3 { color:#333; font-size:22px; margin-top:0; }
+        p { color:#FF6B35; font-weight:bold; }
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       </style>
-      </head><body>
-      <h2>Camp CAL</h2>
-      <h3>${child.name}</h3>
-      ${svgData}
-      <p style="margin-top:12px;">Scan to Check In / Check Out</p>
-      <script>window.print();window.close();</script>
-      </body></html>
+      </head>
+      <body>
+        <h2>Camp CAL</h2>
+        <h3>${child.name}</h3>
+        ${svgData}
+        <p style="margin-top:12px;">Scan to Check In / Check Out</p>
+      </body>
+      </html>
     `)
-    win.document.close()
+    printWindow.document.close()
+    printWindow.onload = () => {
+      printWindow.print()
+    }
+  }
+
+  const triggerConfetti = () => {
+    setShowConfetti(true)
+    setTimeout(() => setShowConfetti(false), 2000)
   }
 
   const handleCheckin = async (action) => {
     setMessage('')
     setError('')
     if (!selectedCaregiver) {
-      setError('You must select a caregiver before checking in or out')
+      setError('You must select a caregiver')
       return
     }
     try {
-      await api.post('/checkin', { child_id: child.id, action, caregiver: selectedCaregiver })
+      const res = await api.post('/checkin', { child_id: child.id, action, caregiver: selectedCaregiver })
       setStatus(action)
-      setMessage(`${child.name} checked ${action === 'in' ? 'IN' : 'OUT'} by ${selectedCaregiver}!`)
-      setSelectedCaregiver('')
       if (action === 'in') {
-        setShowConfetti(true)
-        setTimeout(() => setShowConfetti(false), 2000)
+        setMessage(`${child.name} checked IN by ${selectedCaregiver}!`)
+        setCheckinTime(res.data.timestamp)
+      } else {
+        const elapsed = res.data.elapsed_display || ''
+        setMessage(`${child.name} checked OUT by ${selectedCaregiver}! Time at camp: ${elapsed}`)
+        setCheckinTime(null)
       }
+      setSelectedCaregiver('')
+      triggerConfetti()
       loadData()
     } catch (err) {
-      setError(err.response?.data?.error || 'Check-in failed')
+      setError(err.response?.data?.error || 'Failed')
     }
-  }
-
-  const Confetti = () => {
-    const colors = ['#FF6B35', '#FFD700', '#4CAF50', '#1a9fff', '#7B1FA2', '#E53935']
-    const pieces = Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      color: colors[i % colors.length],
-      x: `${(Math.random() - 0.5) * 600}px`,
-      y: `${(Math.random() - 0.5) * 600}px`,
-      delay: `${Math.random() * 0.3}s`,
-      size: Math.random() * 8 + 6,
-    }))
-    return (
-      <div className="confetti-burst">
-        {pieces.map((p) => (
-          <div
-            key={p.id}
-            className="confetti-piece"
-            style={{ '--x': p.x, '--y': p.y, backgroundColor: p.color, width: p.size, height: p.size, borderRadius: Math.random() > 0.5 ? '50%' : '2px', animationDelay: p.delay }}
-          />
-        ))}
-      </div>
-    )
   }
 
   if (!child && !error) {
@@ -137,21 +184,38 @@ export default function ChildProfile() {
       {showConfetti && <Confetti />}
 
       {/* Header with QR */}
-      <div className="camp-card text-center">
-        <h1 className="font-heading text-3xl mb-1">{child.name}</h1>
-        <div className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4 ${
-          status === 'in' ? 'badge-in' : 'badge-out'
-        }`}>
-          {status === 'in' ? 'Checked In' : 'Not Checked In'}
+      <div className="camp-card">
+        <h1 className="font-heading text-3xl text-center mb-1">{child.name}</h1>
+
+        <div className="flex justify-center mb-2">
+          <div className={`px-4 py-1.5 rounded-full text-sm font-bold ${
+            status === 'in' ? 'badge-in' : 'badge-out'
+          }`}>
+            {status === 'in' ? 'Checked In' : 'Not Checked In'}
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border-2 border-dashed border-yellow-400 inline-block">
-          <QRCodeSVG id="child-qr" value={getQRUrl()} size={180} />
+        {/* Live elapsed timer when checked in */}
+        {status === 'in' && checkinTime && (
+          <div className="text-center mb-3">
+            <p className="text-sm font-bold text-gray-500">Time at camp</p>
+            <p className="font-heading text-2xl text-green-600">
+              <ElapsedTimer since={checkinTime} />
+            </p>
+          </div>
+        )}
+
+        <div className="flex justify-center">
+          <div className="bg-white rounded-xl p-4 border-2 border-dashed border-yellow-400 inline-block">
+            <QRCodeSVG id="child-qr" value={getQRUrl()} size={180} />
+          </div>
         </div>
-        <p className="text-xs text-gray-400 mt-2">Scan this QR code to access this camper's profile</p>
-        <button onClick={printQR} className="btn-camp text-sm !py-2 !px-4 mt-2">
-          Print QR Code
-        </button>
+        <p className="text-xs text-gray-400 mt-2 text-center">Scan this QR code to access this camper's profile</p>
+        <div className="flex justify-center mt-2">
+          <button onClick={printQR} className="btn-camp text-sm !py-2 !px-6">
+            Print QR Code
+          </button>
+        </div>
       </div>
 
       {/* Check In / Out */}
@@ -160,8 +224,19 @@ export default function ChildProfile() {
           {nextAction === 'in' ? 'Check In' : 'Check Out'}
         </h2>
 
-        {/* Caregiver selection — required */}
-        <p className="text-sm font-bold text-gray-600 mb-2">Select caregiver for {nextAction === 'in' ? 'drop-off' : 'pick-up'} *</p>
+        {/* Show elapsed on checkout */}
+        {nextAction === 'out' && checkinTime && (
+          <div className="bg-green-50 border-2 border-green-200 p-3 rounded-xl mb-3 text-center">
+            <p className="text-sm font-bold text-green-700">Currently checked in — Elapsed time:</p>
+            <p className="font-heading text-xl text-green-600">
+              <ElapsedTimer since={checkinTime} />
+            </p>
+          </div>
+        )}
+
+        <p className="text-sm font-bold text-gray-600 mb-2">
+          Select caregiver for {nextAction === 'in' ? 'drop-off' : 'pick-up'} *
+        </p>
         <div className="space-y-2 mb-4">
           {(child.caregivers || []).map((cg, i) => (
             <label
@@ -221,10 +296,16 @@ export default function ChildProfile() {
               <span>{child.age}</span>
             </div>
           )}
-          {child.allergies && (
+          {child.allergies && (Array.isArray(child.allergies) ? child.allergies.length > 0 : child.allergies) && (
             <div>
               <p className="font-bold text-gray-600 mb-1">Allergies</p>
-              <p className="bg-red-50 text-red-700 p-2 rounded-lg border border-red-200">{child.allergies}</p>
+              <div className="flex flex-wrap gap-2">
+                {(Array.isArray(child.allergies) ? child.allergies : [child.allergies]).map((a, i) => (
+                  <span key={i} className="bg-red-50 text-red-700 px-3 py-1 rounded-full border border-red-200 text-xs font-bold">
+                    {a}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
           {child.behaviors && (
@@ -263,26 +344,48 @@ export default function ChildProfile() {
         </ul>
       </div>
 
-      {/* Today's log for this child */}
-      {todayLogs.length > 0 && (
+      {/* Activity history grouped by date */}
+      {allLogs.length > 0 && (
         <div className="camp-card">
-          <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Today's Activity</h2>
-          <ul className="space-y-2">
-            {[...todayLogs].reverse().map((log) => (
-              <li key={log.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
-                <div>
-                  <span className={log.action === 'in' ? 'badge-in' : 'badge-out'}>
-                    {log.action === 'in' ? 'IN' : 'OUT'}
-                  </span>
-                  <span className="text-sm text-gray-500 ml-2">by {log.staff_name}</span>
-                  {log.caregiver && <span className="text-sm text-gray-500"> — {log.caregiver}</span>}
-                </div>
-                <span className="text-xs text-gray-400 font-semibold">
-                  {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Activity History</h2>
+          {Object.entries(
+            allLogs.reduce((groups, log) => {
+              const date = log.date || new Date(log.timestamp).toISOString().split('T')[0]
+              if (!groups[date]) groups[date] = []
+              groups[date].push(log)
+              return groups
+            }, {})
+          ).map(([date, logs]) => (
+            <div key={date} className="mb-4 last:mb-0">
+              <p className="text-sm font-bold text-gray-600 mb-2 border-b border-gray-200 pb-1">
+                {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+              <ul className="space-y-2">
+                {logs.map((log) => (
+                  <li key={log.id} className="py-2 px-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className={log.action === 'in' ? 'badge-in' : 'badge-out'}>
+                          {log.action === 'in' ? 'IN' : 'OUT'}
+                        </span>
+                        <span className="text-sm text-gray-500 ml-2">
+                          {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {log.elapsed_display && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                          {log.elapsed_display}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Staff: {log.staff_name} &middot; Caregiver: {log.caregiver}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
 

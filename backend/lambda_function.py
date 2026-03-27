@@ -302,6 +302,14 @@ def handle_checkin(event, body):
     log_file = f"logs/{today}.json"
     logs = read_json(log_file, [])
 
+    # Check current status to prevent double check-in/out
+    active_logs = [l for l in logs if l.get('child_id') == child_id and not l.get('deleted')]
+    if active_logs:
+        last_action = active_logs[-1].get('action')
+        if last_action == action:
+            return cors_response(400, {'error': f'Child is already checked {action}'})
+
+    now = datetime.now(timezone.utc)
     entry = {
         'id': generate_id(),
         'child_id': child_id,
@@ -310,11 +318,51 @@ def handle_checkin(event, body):
         'caregiver': caregiver,
         'staff_id': user['id'],
         'staff_name': user['name'],
-        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'timestamp': now.isoformat(),
     }
+
+    # On checkout, calculate elapsed time from last check-in
+    if action == 'out' and active_logs:
+        last_in = next((l for l in reversed(active_logs) if l['action'] == 'in'), None)
+        if last_in:
+            checkin_time = datetime.fromisoformat(last_in['timestamp'])
+            elapsed_seconds = int((now - checkin_time).total_seconds())
+            hours, remainder = divmod(elapsed_seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            entry['elapsed_seconds'] = elapsed_seconds
+            entry['elapsed_display'] = f"{hours}h {minutes}m"
+            entry['checked_in_by'] = last_in.get('staff_name', '')
+            entry['checked_in_caregiver'] = last_in.get('caregiver', '')
+
     logs.append(entry)
     write_json(log_file, logs)
     return cors_response(200, entry)
+
+
+def handle_get_child_logs(event, child_id):
+    """Get all logs for a specific child across all dates."""
+    user = get_staff_from_token(event)
+    if not user:
+        return cors_response(401, {'error': 'Unauthorized'})
+
+    # List all log files in the logs/ prefix
+    try:
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=s3_key('logs/'))
+        all_logs = []
+        for obj in response.get('Contents', []):
+            key = obj['Key']
+            if key.endswith('.json'):
+                date_str = key.split('/')[-1].replace('.json', '')
+                day_logs = read_json(f"logs/{date_str}.json", [])
+                for log in day_logs:
+                    if log.get('child_id') == child_id and not log.get('deleted'):
+                        log['date'] = date_str
+                        all_logs.append(log)
+        # Sort by timestamp descending
+        all_logs.sort(key=lambda l: l.get('timestamp', ''), reverse=True)
+        return cors_response(200, all_logs)
+    except Exception:
+        return cors_response(200, [])
 
 
 def handle_get_logs(event):
@@ -399,6 +447,9 @@ def lambda_handler(event, context):
         return handle_get_children(event)
     elif path == '/api/children' and method == 'POST':
         return handle_add_child(event, body)
+    elif path.startswith('/api/children/') and path.endswith('/logs') and method == 'GET':
+        child_id = path.split('/')[-2]
+        return handle_get_child_logs(event, child_id)
     elif path.startswith('/api/children/') and method == 'GET':
         child_id = path.split('/')[-1]
         return handle_get_child(event, child_id)

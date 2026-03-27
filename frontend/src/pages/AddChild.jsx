@@ -5,7 +5,7 @@ import api from '../api/client'
 export default function AddChild() {
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
-  const [allergies, setAllergies] = useState('')
+  const [allergies, setAllergies] = useState([''])
   const [behaviors, setBehaviors] = useState('')
   const [elopementRisk, setElopementRisk] = useState(false)
   const [notes, setNotes] = useState('')
@@ -13,20 +13,13 @@ export default function AddChild() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const addCaregiver = () => {
-    setCaregivers([...caregivers, { name: '', relationship: '', phone: '' }])
-  }
+  const addCaregiver = () => setCaregivers([...caregivers, { name: '', relationship: '', phone: '' }])
+  const removeCaregiver = (i) => { if (caregivers.length > 1) setCaregivers(caregivers.filter((_, idx) => idx !== i)) }
+  const updateCaregiver = (i, field, value) => { const u = [...caregivers]; u[i][field] = value; setCaregivers(u) }
 
-  const removeCaregiver = (index) => {
-    if (caregivers.length <= 1) return
-    setCaregivers(caregivers.filter((_, i) => i !== index))
-  }
-
-  const updateCaregiver = (index, field, value) => {
-    const updated = [...caregivers]
-    updated[index][field] = value
-    setCaregivers(updated)
-  }
+  const addAllergy = () => setAllergies([...allergies, ''])
+  const removeAllergy = (i) => { if (allergies.length > 1) setAllergies(allergies.filter((_, idx) => idx !== i)) }
+  const updateAllergy = (i, value) => { const u = [...allergies]; u[i] = value; setAllergies(u) }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,11 +31,13 @@ export default function AddChild() {
       return
     }
 
+    const validAllergies = allergies.filter((a) => a.trim())
+
     try {
       const res = await api.post('/children', {
         name,
         age,
-        allergies,
+        allergies: validAllergies,
         behaviors,
         elopement_risk: elopementRisk,
         notes,
@@ -80,16 +75,35 @@ export default function AddChild() {
           {/* Medical & Behavioral */}
           <div className="space-y-3">
             <h2 className="font-heading text-lg text-gray-700 border-b-2 border-yellow-400 pb-1">Medical & Behavioral</h2>
+
+            {/* Allergies - dynamic list */}
             <div>
               <label className="block text-sm font-bold text-gray-600 mb-1">Allergies</label>
-              <textarea
-                value={allergies}
-                onChange={(e) => setAllergies(e.target.value)}
-                className="camp-input"
-                rows={2}
-                placeholder="List any food, medication, or environmental allergies..."
-              />
+              {allergies.map((allergy, i) => (
+                <div key={i} className="flex items-center gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={allergy}
+                    onChange={(e) => updateAllergy(i, e.target.value)}
+                    className="camp-input !py-2"
+                    placeholder={`Allergy ${i + 1} (e.g. Peanuts)`}
+                  />
+                  {allergies.length > 1 && (
+                    <button type="button" onClick={() => removeAllergy(i)} className="text-red-500 font-bold text-lg px-2 hover:text-red-700">
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addAllergy}
+                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-bold text-sm hover:border-red-400 hover:text-red-500 transition-all"
+              >
+                + Add Allergy
+              </button>
             </div>
+
             <div>
               <label className="block text-sm font-bold text-gray-600 mb-1">Behaviors</label>
               <textarea
