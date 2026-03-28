@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
 
@@ -9,6 +9,8 @@ export default function Login() {
   const [error, setError] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo = location.state?.from || '/'
 
   useEffect(() => {
     api.get('/setup').then((res) => {
@@ -21,7 +23,7 @@ export default function Login() {
     setError('')
     try {
       await login(name, pin)
-      navigate('/')
+      navigate(redirectTo)
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed')
     }

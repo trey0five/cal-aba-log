@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import AnimatedBackground from './components/AnimatedBackground'
 import Navbar from './components/Navbar'
@@ -14,7 +14,8 @@ import ChangePin from './pages/ChangePin'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
-  return user ? children : <Navigate to="/login" />
+  const location = useLocation()
+  return user ? children : <Navigate to="/login" state={{ from: location.pathname }} />
 }
 
 export default function App() {

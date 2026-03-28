@@ -226,9 +226,18 @@ def handle_add_child(event, body):
         'id': generate_id(),
         'name': name,
         'age': body.get('age', ''),
-        'allergies': body.get('allergies', ''),
-        'behaviors': body.get('behaviors', ''),
+        'allergies': body.get('allergies', []),
+        'behaviors': body.get('behaviors', []),
         'elopement_risk': body.get('elopement_risk', False),
+        'one_to_one': body.get('one_to_one', False),
+        'pica': body.get('pica', False),
+        'epi_pen': body.get('epi_pen', False),
+        'communication_styles': body.get('communication_styles', []),
+        'reinforcers': body.get('reinforcers', []),
+        'dislikes': body.get('dislikes', []),
+        'diet_restrictions': body.get('diet_restrictions', []),
+        'toileting_help': body.get('toileting_help', False),
+        'pictures_allowed': body.get('pictures_allowed', True),
         'notes': body.get('notes', ''),
         'caregivers': caregivers,
         'created_at': datetime.now(timezone.utc).isoformat(),
@@ -249,7 +258,7 @@ def handle_update_child(event, child_id, body):
         return cors_response(404, {'error': 'Child not found'})
 
     # Update fields
-    for field in ['name', 'age', 'allergies', 'behaviors', 'elopement_risk', 'notes', 'caregivers']:
+    for field in ['name', 'age', 'allergies', 'behaviors', 'elopement_risk', 'one_to_one', 'pica', 'epi_pen', 'communication_styles', 'reinforcers', 'dislikes', 'diet_restrictions', 'toileting_help', 'pictures_allowed', 'notes', 'caregivers']:
         if field in body:
             child[field] = body[field]
 
@@ -432,6 +441,68 @@ def handle_change_pin(event, body):
     return cors_response(200, {'message': 'PIN changed successfully'})
 
 
+def handle_upload_photo(event, child_id, body):
+    """Upload a profile photo for a child (base64 encoded)."""
+    user = get_staff_from_token(event)
+    if not user:
+        return cors_response(401, {'error': 'Unauthorized'})
+
+    # Handle remove
+    if body.get('remove'):
+        children = read_json('children.json', [])
+        child = next((c for c in children if c['id'] == child_id), None)
+        if child and child.get('photo_key'):
+            try:
+                s3.delete_object(Bucket=S3_BUCKET, Key=child['photo_key'])
+            except Exception:
+                pass
+            child.pop('photo_key', None)
+            write_json('children.json', children)
+        return cors_response(200, {'message': 'Photo removed'})
+
+    image_data = body.get('image', '')
+    content_type = body.get('content_type', 'image/jpeg')
+    if not image_data:
+        return cors_response(400, {'error': 'No image data'})
+
+    import base64 as b64mod
+    try:
+        raw = b64mod.b64decode(image_data)
+    except Exception:
+        return cors_response(400, {'error': 'Invalid image data'})
+
+    ext = 'jpg' if 'jpeg' in content_type or 'jpg' in content_type else 'png'
+    photo_key = f"{S3_PREFIX}/photos/{child_id}.{ext}"
+    s3.put_object(Bucket=S3_BUCKET, Key=photo_key, Body=raw, ContentType=content_type, ServerSideEncryption='AES256')
+
+    # Save photo key on child
+    children = read_json('children.json', [])
+    child = next((c for c in children if c['id'] == child_id), None)
+    if child:
+        child['photo_key'] = photo_key
+        write_json('children.json', children)
+
+    return cors_response(200, {'photo_key': photo_key})
+
+
+def handle_get_photo(event, child_id):
+    """Get a presigned URL for a child's profile photo."""
+    user = get_staff_from_token(event)
+    if not user:
+        return cors_response(401, {'error': 'Unauthorized'})
+
+    children = read_json('children.json', [])
+    child = next((c for c in children if c['id'] == child_id), None)
+    if not child or not child.get('photo_key'):
+        return cors_response(404, {'error': 'No photo'})
+
+    try:
+        url = s3.generate_presigned_url('get_object', Params={'Bucket': S3_BUCKET, 'Key': child['photo_key']}, ExpiresIn=3600)
+        return cors_response(200, {'url': url})
+    except Exception:
+        return cors_response(500, {'error': 'Could not generate photo URL'})
+
+
 def handle_check_setup():
     """Check if initial setup has been done."""
     staff_list = read_json('staff.json', [])
@@ -504,6 +575,12 @@ def lambda_handler(event, context):
     elif path.startswith('/api/children/') and path.endswith('/logs') and method == 'GET':
         child_id = path.split('/')[-2]
         return handle_get_child_logs(event, child_id)
+    elif path.startswith('/api/children/') and path.endswith('/photo') and method == 'POST':
+        child_id = path.split('/')[-2]
+        return handle_upload_photo(event, child_id, body)
+    elif path.startswith('/api/children/') and path.endswith('/photo') and method == 'GET':
+        child_id = path.split('/')[-2]
+        return handle_get_photo(event, child_id)
     elif path.startswith('/api/children/') and method == 'GET':
         child_id = path.split('/')[-1]
         return handle_get_child(event, child_id)
