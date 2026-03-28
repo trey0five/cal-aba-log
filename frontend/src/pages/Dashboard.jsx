@@ -35,10 +35,10 @@ export default function Dashboard() {
           <p className="text-5xl font-heading drop-shadow-md">{checkedIn.length}</p>
           <p className="text-white/90 font-bold mt-1">Checked In</p>
         </div>
-        <div className="stat-card stat-card-blue">
+        <Link to="/children" className="stat-card stat-card-blue block hover:scale-[1.03] transition-transform">
           <p className="text-5xl font-heading drop-shadow-md">{children.length}</p>
           <p className="text-white/90 font-bold mt-1">Total Campers</p>
-        </div>
+        </Link>
       </div>
 
       <Link to="/children/add" className="btn-camp btn-camp-green text-center block wiggle mb-6">
