@@ -41,9 +41,11 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      <Link to="/children/add" className="btn-camp btn-camp-green text-center block wiggle mb-6">
-        + Add Camper
-      </Link>
+      {user?.role === 'admin' && (
+        <Link to="/children/add" className="btn-camp btn-camp-green text-center block wiggle mb-6">
+          + Add Camper
+        </Link>
+      )}
 
       {checkedIn.length > 0 && (
         <div className="camp-card">

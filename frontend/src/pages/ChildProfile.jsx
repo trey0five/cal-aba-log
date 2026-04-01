@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import api from '../api/client'
+import { useAuth } from '../context/AuthContext'
 import PhotoCropper from '../components/PhotoCropper'
 
 function ElapsedTimer({ since }) {
@@ -93,6 +94,8 @@ function DynamicListEdit({ items, setItems, placeholder }) {
 export default function ChildProfile() {
   const { childId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const [child, setChild] = useState(null)
   const [status, setStatus] = useState(null)
   const [checkinTime, setCheckinTime] = useState(null)
@@ -314,17 +317,19 @@ export default function ChildProfile() {
               <span className="text-3xl text-gray-400">👤</span>
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <label className="text-xs font-bold text-blue-500 hover:text-blue-700 cursor-pointer">
-              {uploading ? 'Uploading...' : (photoUrl ? 'Change Photo' : 'Add Photo')}
-              <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" disabled={uploading} />
-            </label>
-            {photoUrl && (
-              <button onClick={handleRemovePhoto} className="text-xs font-bold text-red-400 hover:text-red-600">
-                Remove
-              </button>
-            )}
-          </div>
+          {isAdmin && (
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-bold text-blue-500 hover:text-blue-700 cursor-pointer">
+                {uploading ? 'Uploading...' : (photoUrl ? 'Change Photo' : 'Add Photo')}
+                <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" disabled={uploading} />
+              </label>
+              {photoUrl && (
+                <button onClick={handleRemovePhoto} className="text-xs font-bold text-red-400 hover:text-red-600">
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-center mb-2">
@@ -378,7 +383,7 @@ export default function ChildProfile() {
       </div>
 
       {/* ═══════════ EDIT MODE ═══════════ */}
-      {editing ? (
+      {isAdmin && editing ? (
         <div className="camp-card space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-lg">Edit Camper</h2>
@@ -510,7 +515,7 @@ export default function ChildProfile() {
           <div className="camp-card">
             <div className="flex items-center justify-between mb-3 border-b-2 border-yellow-400 pb-1">
               <h2 className="font-heading text-lg">Camper Information</h2>
-              <button onClick={startEdit} className="text-sm font-bold text-blue-500 hover:text-blue-700">Edit</button>
+              {isAdmin && <button onClick={startEdit} className="text-sm font-bold text-blue-500 hover:text-blue-700">Edit</button>}
             </div>
             <div className="space-y-3 text-sm">
               {child.age && <p className="font-bold text-gray-700">Age: {child.age}</p>}
@@ -587,7 +592,7 @@ export default function ChildProfile() {
           <div className="camp-card">
             <div className="flex items-center justify-between mb-3 border-b-2 border-yellow-400 pb-1">
               <h2 className="font-heading text-lg">Authorized Pickup / Caregivers</h2>
-              <button onClick={startEdit} className="text-sm font-bold text-blue-500 hover:text-blue-700">Edit</button>
+              {isAdmin && <button onClick={startEdit} className="text-sm font-bold text-blue-500 hover:text-blue-700">Edit</button>}
             </div>
             <ul className="space-y-2">
               {(child.caregivers || []).map((cg, i) => (
@@ -652,7 +657,7 @@ export default function ChildProfile() {
       })()}
 
       {/* Delete child */}
-      {!editing && (
+      {isAdmin && !editing && (
         <div className="camp-card text-center">
           <button onClick={async () => {
             if (!confirm(`Remove ${child.name}? This cannot be undone.`)) return

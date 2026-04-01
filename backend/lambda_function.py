@@ -208,10 +208,77 @@ def handle_get_children(event):
     return cors_response(200, children)
 
 
-def handle_add_child(event, body):
+def handle_get_groups(event):
     user = get_staff_from_token(event)
     if not user:
         return cors_response(401, {'error': 'Unauthorized'})
+    groups = read_json('groups.json', [])
+    return cors_response(200, groups)
+
+
+def handle_create_group(event, body):
+    user = get_staff_from_token(event)
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
+    name = body.get('name', '').strip()
+    color = body.get('color', 'blue')
+    if not name:
+        return cors_response(400, {'error': 'Group name required'})
+    groups = read_json('groups.json', [])
+    group = {'id': generate_id(), 'name': name, 'color': color, 'children': []}
+    groups.append(group)
+    write_json('groups.json', groups)
+    return cors_response(200, group)
+
+
+def handle_delete_group(event, group_id):
+    user = get_staff_from_token(event)
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
+    groups = read_json('groups.json', [])
+    groups = [g for g in groups if g['id'] != group_id]
+    write_json('groups.json', groups)
+    return cors_response(200, {'message': 'Group deleted'})
+
+
+def handle_group_add_child(event, group_id, body):
+    user = get_staff_from_token(event)
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
+    child_id = body.get('child_id', '')
+    if not child_id:
+        return cors_response(400, {'error': 'child_id required'})
+    groups = read_json('groups.json', [])
+    # Remove child from any existing group first
+    for g in groups:
+        g['children'] = [c for c in g['children'] if c != child_id]
+    # Add to target group
+    group = next((g for g in groups if g['id'] == group_id), None)
+    if not group:
+        return cors_response(404, {'error': 'Group not found'})
+    if child_id not in group['children']:
+        group['children'].append(child_id)
+    write_json('groups.json', groups)
+    return cors_response(200, group)
+
+
+def handle_group_remove_child(event, group_id, body):
+    user = get_staff_from_token(event)
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
+    child_id = body.get('child_id', '')
+    groups = read_json('groups.json', [])
+    group = next((g for g in groups if g['id'] == group_id), None)
+    if group:
+        group['children'] = [c for c in group['children'] if c != child_id]
+        write_json('groups.json', groups)
+    return cors_response(200, {'message': 'Removed from group'})
+
+
+def handle_add_child(event, body):
+    user = get_staff_from_token(event)
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
 
     name = body.get('name', '').strip()
     if not name:
@@ -249,8 +316,8 @@ def handle_add_child(event, body):
 
 def handle_update_child(event, child_id, body):
     user = get_staff_from_token(event)
-    if not user:
-        return cors_response(401, {'error': 'Unauthorized'})
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
 
     children = read_json('children.json', [])
     child = next((c for c in children if c['id'] == child_id), None)
@@ -280,8 +347,8 @@ def handle_get_child(event, child_id):
 
 def handle_delete_child(event, child_id):
     user = get_staff_from_token(event)
-    if not user:
-        return cors_response(401, {'error': 'Unauthorized'})
+    if not user or user.get('role') != 'admin':
+        return cors_response(403, {'error': 'Admin only'})
 
     children = read_json('children.json', [])
     children = [c for c in children if c['id'] != child_id]
@@ -568,6 +635,19 @@ def lambda_handler(event, context):
     elif path.startswith('/api/staff/') and method == 'DELETE':
         staff_id = path.split('/')[-1]
         return handle_delete_staff(event, staff_id)
+    elif path == '/api/groups' and method == 'GET':
+        return handle_get_groups(event)
+    elif path == '/api/groups' and method == 'POST':
+        return handle_create_group(event, body)
+    elif path.startswith('/api/groups/') and path.endswith('/add-child') and method == 'POST':
+        group_id = path.split('/')[-2]
+        return handle_group_add_child(event, group_id, body)
+    elif path.startswith('/api/groups/') and path.endswith('/remove-child') and method == 'POST':
+        group_id = path.split('/')[-2]
+        return handle_group_remove_child(event, group_id, body)
+    elif path.startswith('/api/groups/') and method == 'DELETE':
+        group_id = path.split('/')[-1]
+        return handle_delete_group(event, group_id)
     elif path == '/api/children' and method == 'GET':
         return handle_get_children(event)
     elif path == '/api/children' and method == 'POST':
