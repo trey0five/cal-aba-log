@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 
 export default function Staff() {
   const { user } = useAuth()
@@ -11,6 +13,7 @@ export default function Staff() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const pg = usePagination(staff, { pageSize: 10, resetKey: 'staff' })
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -92,7 +95,7 @@ export default function Staff() {
       </div>
 
       <ul className="space-y-2">
-        {staff.map((s) => (
+        {pg.pageItems.map((s) => (
           <li key={s.id} className="camp-card !p-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
@@ -120,6 +123,7 @@ export default function Staff() {
           </li>
         ))}
       </ul>
+      <Pagination page={pg.page} totalPages={pg.totalPages} totalItems={pg.totalItems} startIndex={pg.startIndex} endIndex={pg.endIndex} onPrev={pg.prev} onNext={pg.next} label="staff" />
 
     </div>
   )

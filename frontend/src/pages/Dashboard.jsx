@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -18,6 +20,8 @@ export default function Dashboard() {
     if (childLogs.length === 0) return false
     return childLogs[childLogs.length - 1].action === 'in'
   })
+
+  const pg = usePagination(checkedIn, { pageSize: 10, resetKey: 'dash-checkedin' })
 
   return (
     <div className="page-enter">
@@ -51,7 +55,7 @@ export default function Dashboard() {
         <div className="camp-card">
           <h2 className="font-heading text-xl mb-3 text-green-700">Currently at Camp</h2>
           <ul className="space-y-2">
-            {checkedIn.map((child) => (
+            {pg.pageItems.map((child) => (
               <li key={child.id} className="flex items-center justify-between py-2 px-3 bg-green-50 rounded-xl border border-green-100">
                 <span className="font-bold text-gray-700">{child.name}</span>
                 <Link to={`/child/${child.id}`} className="badge-out text-xs hover:scale-105 transition-transform cursor-pointer">
@@ -60,6 +64,7 @@ export default function Dashboard() {
               </li>
             ))}
           </ul>
+          <Pagination page={pg.page} totalPages={pg.totalPages} totalItems={pg.totalItems} startIndex={pg.startIndex} endIndex={pg.endIndex} onPrev={pg.prev} onNext={pg.next} label="campers" variant="onCard" />
         </div>
       )}
 
