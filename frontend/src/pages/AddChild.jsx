@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/client'
+import { buildCaregiverName, validateCaregiverNames } from '../utils/caregivers'
 
 function formatPhone(value) {
   const digits = value.replace(/\D/g, '').slice(0, 10)
@@ -84,14 +85,21 @@ export default function AddChild() {
     e.preventDefault()
     setError('')
 
-    const validCaregivers = caregivers
-      .filter((c) => c.firstName.trim())
-      .map((c) => ({ name: `${c.firstName.trim()} ${c.lastName.trim()}`.trim(), relationship: c.relationship, phone: c.phone }))
+    const keptCaregivers = caregivers.filter((c) => c.firstName.trim())
 
-    if (validCaregivers.length === 0) {
+    if (keptCaregivers.length === 0) {
       setError('At least one caregiver is required')
       return
     }
+
+    const cgError = validateCaregiverNames(keptCaregivers)
+    if (cgError) {
+      setError(cgError)
+      return
+    }
+
+    const validCaregivers = keptCaregivers
+      .map((c) => ({ name: buildCaregiverName(c.firstName, c.lastName), relationship: c.relationship, phone: c.phone }))
 
     const allDiet = [...dietRestrictions, ...customDiet.filter((d) => d.trim())]
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()

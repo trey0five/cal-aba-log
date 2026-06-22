@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import PhotoCropper from '../components/PhotoCropper'
+import { buildCaregiverName, validateCaregiverNames } from '../utils/caregivers'
 
 function ElapsedTimer({ since }) {
   const [elapsed, setElapsed] = useState('')
@@ -213,14 +214,21 @@ export default function ChildProfile() {
 
   const saveEdit = async () => {
     const d = editData
-    const validCaregivers = d.caregivers
-      .filter((c) => c.firstName.trim())
-      .map((c) => ({ name: `${c.firstName.trim()} ${c.lastName.trim()}`.trim(), relationship: c.relationship, phone: c.phone }))
+    const keptCaregivers = d.caregivers.filter((c) => c.firstName.trim())
 
-    if (validCaregivers.length === 0) {
+    if (keptCaregivers.length === 0) {
       setError('At least one caregiver is required')
       return
     }
+
+    const cgError = validateCaregiverNames(keptCaregivers)
+    if (cgError) {
+      setError(cgError)
+      return
+    }
+
+    const validCaregivers = keptCaregivers
+      .map((c) => ({ name: buildCaregiverName(c.firstName, c.lastName), relationship: c.relationship, phone: c.phone }))
 
     const allDiet = [...d.diet_presets, ...d.diet_custom.filter((x) => x.trim())]
 
