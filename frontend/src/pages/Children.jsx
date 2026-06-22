@@ -2,6 +2,34 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
+import Pagination from '../components/Pagination'
+import SearchInput from '../components/SearchInput'
+import usePagination from '../hooks/usePagination'
+import filterByName from '../utils/filterByName'
+
+function GroupSection({ items, groupId, bucketKey, renderChild, emptyText }) {
+  const [search, setSearch] = useState('')
+  const filtered = filterByName(items, search)
+  const pg = usePagination(filtered, { pageSize: 10, resetKey: `${bucketKey}|${search.trim().toLowerCase()}` })
+  return (
+    <>
+      {items.length > 0 && (
+        <SearchInput value={search} onChange={setSearch} placeholder="Search by name…" className="mb-2" />
+      )}
+      {items.length === 0 ? (
+        <p className="text-sm text-gray-400 font-semibold p-3">{emptyText}</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-gray-400 font-semibold p-3">No campers match</p>
+      ) : (
+        <>
+          <ul className="space-y-2">{pg.pageItems.map((c) => renderChild(c, groupId))}</ul>
+          <Pagination page={pg.page} totalPages={pg.totalPages} totalItems={pg.totalItems}
+            startIndex={pg.startIndex} endIndex={pg.endIndex} onPrev={pg.prev} onNext={pg.next} label="campers" />
+        </>
+      )}
+    </>
+  )
+}
 
 const GROUP_THEMES = [
   { bg: 'bg-gradient-to-br from-blue-400 to-blue-600', border: 'border-blue-300', icon: '🏕️' },
@@ -165,13 +193,8 @@ export default function Children() {
 
                 {isOpen && (
                   <div className="mt-2 ml-3 space-y-2">
-                    {groupChildren.length === 0 ? (
-                      <p className="text-sm text-gray-400 font-semibold p-3">No campers in this group yet</p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {groupChildren.map((child) => renderChild(child, group.id))}
-                      </ul>
-                    )}
+                    <GroupSection items={groupChildren} groupId={group.id} bucketKey={group.id}
+                      renderChild={renderChild} emptyText="No campers in this group yet" />
                     {isAdmin && (
                       <button onClick={() => deleteGroup(group.id)} className="text-xs font-bold text-red-400 hover:text-red-600 mt-1 ml-1">
                         Delete Group
@@ -225,9 +248,8 @@ export default function Children() {
           {groups.length > 0 && (
             <h2 className="font-heading text-lg text-white drop-shadow-lg mb-3">Ungrouped Campers</h2>
           )}
-          <ul className="space-y-3">
-            {ungrouped.map((child) => renderChild(child, null))}
-          </ul>
+          <GroupSection items={ungrouped} groupId={null} bucketKey="ungrouped"
+            renderChild={renderChild} emptyText="No ungrouped campers" />
         </div>
       )}
     </div>

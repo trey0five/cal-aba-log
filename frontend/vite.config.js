@@ -6,9 +6,13 @@ export default defineConfig({
   base: '/',
   server: {
     proxy: {
+      // Proxy API calls to the deployed AWS backend server-side so the browser
+      // stays same-origin (avoids CORS during local dev). Requires the client to
+      // use the relative '/api' base (see .env.development).
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://aywg9l5gba.execute-api.us-east-1.amazonaws.com',
         changeOrigin: true,
+        secure: true,
       },
     },
   },

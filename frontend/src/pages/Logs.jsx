@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/client'
+import Pagination from '../components/Pagination'
+import SearchInput from '../components/SearchInput'
+import usePagination from '../hooks/usePagination'
+import filterByName from '../utils/filterByName'
 
 export default function Logs() {
   const { user } = useAuth()
@@ -11,6 +15,7 @@ export default function Logs() {
   const [allChildLogs, setAllChildLogs] = useState([])
   const [selectedDate, setSelectedDate] = useState(null)
   const [dayLogs, setDayLogs] = useState([])
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     api.get('/children').then((res) => setChildren(res.data)).catch(() => {})
@@ -82,6 +87,14 @@ export default function Logs() {
   const formatTime = (timestamp) =>
     new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
+  const grouped = getGroupedByDate() // pure fn, safe to call every render
+  const sortedDayLogs = [...dayLogs].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+
+  const filteredChildren = useMemo(() => filterByName(children, search), [children, search])
+  const childPg = usePagination(filteredChildren, { pageSize: 10, resetKey: search.trim().toLowerCase() })
+  const datePg = usePagination(grouped, { pageSize: 10, resetKey: selectedChild?.id ?? 'none' })
+  const logPg = usePagination(sortedDayLogs, { pageSize: 10, resetKey: selectedDate ?? 'none' })
+
   // ── View 1: Child selection ──
   if (!selectedChild) {
     return (
@@ -95,8 +108,18 @@ export default function Logs() {
             <p className="font-heading text-lg text-gray-500">No campers yet</p>
           </div>
         ) : (
+          <>
+          <div className="mb-3">
+            <SearchInput value={search} onChange={setSearch} placeholder="Search campers…" />
+          </div>
+          {filteredChildren.length === 0 ? (
+            <div className="camp-card text-center py-6">
+              <p className="font-heading text-lg text-gray-500">No campers match</p>
+            </div>
+          ) : (
+          <>
           <ul className="space-y-3">
-            {children.map((child) => (
+            {childPg.pageItems.map((child) => (
               <li key={child.id}>
                 <button
                   onClick={() => selectChild(child)}
@@ -117,6 +140,10 @@ export default function Logs() {
               </li>
             ))}
           </ul>
+          <Pagination page={childPg.page} totalPages={childPg.totalPages} totalItems={childPg.totalItems} startIndex={childPg.startIndex} endIndex={childPg.endIndex} onPrev={childPg.prev} onNext={childPg.next} label="campers" />
+          </>
+          )}
+          </>
         )}
       </div>
     )
@@ -124,9 +151,6 @@ export default function Logs() {
 
   // ── View 3: Day detail ──
   if (selectedDate) {
-    // Pair up check-ins and check-outs
-    const sortedLogs = [...dayLogs].sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-
     return (
       <div className="page-enter">
         <div className="page-header flex items-center justify-between mb-4">
@@ -144,7 +168,7 @@ export default function Logs() {
 
         {/* Day summary card */}
         {(() => {
-          const summary = getDaySummary(sortedLogs)
+          const summary = getDaySummary(sortedDayLogs)
           return (
             <div className="camp-card mb-4">
               <h2 className="font-heading text-lg mb-3 border-b-2 border-yellow-400 pb-1">Day Summary</h2>
@@ -168,7 +192,7 @@ export default function Logs() {
 
         {/* Individual log entries */}
         <ul className="space-y-3">
-          {sortedLogs.map((log) => (
+          {logPg.pageItems.map((log) => (
             <li key={log.id} className="camp-card !p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -217,13 +241,12 @@ export default function Logs() {
             </li>
           ))}
         </ul>
+        <Pagination page={logPg.page} totalPages={logPg.totalPages} totalItems={logPg.totalItems} startIndex={logPg.startIndex} endIndex={logPg.endIndex} onPrev={logPg.prev} onNext={logPg.next} label="entries" />
       </div>
     )
   }
 
   // ── View 2: Date list for selected child ──
-  const grouped = getGroupedByDate()
-
   return (
     <div className="page-enter">
       <div className="page-header flex items-center justify-between mb-4">
@@ -241,8 +264,9 @@ export default function Logs() {
           <p className="font-heading text-lg text-gray-500">No activity logs for {selectedChild.name}</p>
         </div>
       ) : (
+        <>
         <ul className="space-y-3">
-          {grouped.map(([date, logs]) => {
+          {datePg.pageItems.map(([date, logs]) => {
             const summary = getDaySummary(logs)
             return (
               <li key={date}>
@@ -268,6 +292,8 @@ export default function Logs() {
             )
           })}
         </ul>
+        <Pagination page={datePg.page} totalPages={datePg.totalPages} totalItems={datePg.totalItems} startIndex={datePg.startIndex} endIndex={datePg.endIndex} onPrev={datePg.prev} onNext={datePg.next} label="days" />
+        </>
       )}
     </div>
   )
