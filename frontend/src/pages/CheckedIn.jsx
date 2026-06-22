@@ -147,15 +147,16 @@ export default function CheckedIn() {
                 {pg.pageItems.map((child) => (
                   <li key={child.id}>
                     <Link to={`/child/${child.id}`} className="camp-card block hover:scale-[1.01] transition-transform">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-heading text-lg">{child.name}</p>
-                          <p className="text-xs text-gray-500 font-semibold">
-                            Dropped off by: {child.caregiver} &middot; Staff: {child.checkinBy}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-heading text-lg truncate">{child.name}</p>
+                          <p className="text-xs text-gray-500 font-semibold break-words line-clamp-2">
+                            Dropped off by: {child.caregiver}
                           </p>
+                          <p className="text-xs text-gray-400 font-semibold">Staff: {child.checkinBy}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-heading text-lg text-green-600">
+                        <div className="text-right shrink-0">
+                          <p className="font-heading text-base sm:text-lg text-green-600 whitespace-nowrap tabular-nums">
                             <ElapsedTimer since={child.checkinTime} />
                           </p>
                           <p className="text-xs font-bold text-gray-400">elapsed</p>
