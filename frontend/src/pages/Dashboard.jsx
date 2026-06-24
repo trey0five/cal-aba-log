@@ -46,6 +46,16 @@ export default function Dashboard() {
       </div>
 
       {user?.role === 'admin' && (
+        <Link to="/photo-permissions" className="camp-card flex items-center justify-between mb-4 hover:scale-[1.01] transition-transform">
+          <div>
+            <p className="font-heading text-lg">📷 Photo Permissions</p>
+            <p className="text-xs text-gray-500 font-semibold">See who's OK to post on social media</p>
+          </div>
+          <span className="text-blue-500 font-bold text-xl shrink-0 ml-2">→</span>
+        </Link>
+      )}
+
+      {user?.role === 'admin' && (
         <Link to="/children/add" className="btn-camp btn-camp-green text-center block wiggle mb-6">
           + Add Camper
         </Link>
