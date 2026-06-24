@@ -12,6 +12,7 @@ import Logs from './pages/Logs'
 import Staff from './pages/Staff'
 import ChangePin from './pages/ChangePin'
 import CheckedIn from './pages/CheckedIn'
+import PhotoPermissions from './pages/PhotoPermissions'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
           <Route path="/change-pin" element={<ProtectedRoute><ChangePin /></ProtectedRoute>} />
           <Route path="/checked-in" element={<ProtectedRoute><CheckedIn /></ProtectedRoute>} />
+          <Route path="/photo-permissions" element={<ProtectedRoute><PhotoPermissions /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
